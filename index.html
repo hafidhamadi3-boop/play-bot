@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>X-Pay Game Center</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { background: #0f0f0f; color: white; font-family: sans-serif; text-align: center; padding: 15px; margin: 0; }
+        .header { background: #1e1e1e; padding: 20px; border-radius: 0 0 20px 20px; margin-bottom: 20px; border-bottom: 3px solid #0088cc; }
+        .stats { display: flex; justify-content: space-around; background: #252525; padding: 10px; border-radius: 12px; margin-top: 10px; }
+        .game-card { background: #1e1e1e; border-radius: 15px; padding: 20px; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; border: 1px solid #333; cursor: pointer; }
+        .game-info { text-align: right; flex-grow: 1; margin-right: 15px; }
+        .game-icon { font-size: 35px; }
+        .play-btn { background: #0088cc; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: bold; }
+        h2 { margin: 0; color: #0088cc; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>🎮 مركز ألعاب X-Pay</h2>
+        <div class="stats">
+            <span>💎 النقاط: <b id="user-points">0</b></span>
+            <span>❤️ القلوب: <b id="user-lives">3</b></span>
+        </div>
+    </div>
+
+    <div class="game-card" onclick="location.href='spin.html'">
+        <div class="game-icon">🎡</div>
+        <div class="game-info">
+            <b>عجلة الحظ</b><br><small>اربح جوائز فورية كل يوم</small>
+        </div>
+        <button class="play-btn">العب</button>
+    </div>
+
+    <div class="game-card" onclick="location.href='quiz.html'">
+        <div class="game-icon">🧠</div>
+        <div class="game-info">
+            <b>تحدي المعلومات</b><br><small>أجب واجمع نقاط XPAY</small>
+        </div>
+        <button class="play-btn">العب</button>
+    </div>
+
+    <div class="game-card" onclick="location.href='leaderboard.html'">
+        <div class="game-icon">🏆</div>
+        <div class="game-info">
+            <b>لوحة الشرف</b><br><small>قائمة أغنى اللاعبين</small>
+        </div>
+        <button class="play-btn">عرض</button>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        // سيتم ربط النقاط والقلوب لاحقاً عبر عنوان URL
+    </script>
+</body>
+</html>

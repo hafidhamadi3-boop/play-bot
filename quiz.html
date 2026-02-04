@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>X-Pay Quiz</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { background: #0f0f0f; color: white; font-family: sans-serif; text-align: center; padding: 20px; }
+        .q-container { background: #1e1e1e; padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .option { background: #2c2c2c; border: 1px solid #444; padding: 15px; margin: 10px 0; border-radius: 12px; cursor: pointer; transition: 0.2s; }
+        .option:active { background: #0088cc; }
+        #question { font-size: 18px; margin-bottom: 20px; line-height: 1.5; }
+    </style>
+</head>
+<body>
+    <div class="q-container">
+        <div id="question">جاري جلب السؤال...</div>
+        <div id="options"></div>
+    </div>
+    <button onclick="location.href='index.html'" style="margin-top:30px; background:none; border:none; color:#888;">⬅️ مغادرة اللعبة</button>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        
+        async function getQuiz() {
+            const res = await fetch('https://opentdb.com/api.php?amount=1&type=multiple&category=18');
+            const data = await res.json();
+            const item = data.results[0];
+            
+            document.getElementById('question').innerHTML = item.question;
+            const optionsDiv = document.getElementById('options');
+            optionsDiv.innerHTML = '';
+            
+            let answers = [...item.incorrect_answers, item.correct_answer].sort(() => Math.random() - 0.5);
+            
+            answers.forEach(ans => {
+                const div = document.createElement('div');
+                div.className = 'option';
+                div.innerHTML = ans;
+                div.onclick = () => {
+                    if(ans === item.correct_answer) {
+                        tg.HapticFeedback.notificationOccurred('success');
+                        alert("إجابة صحيحة! +10 نقاط");
+                        getQuiz();
+                    } else {
+                        tg.HapticFeedback.notificationOccurred('error');
+                        alert("للأسف إجابة خاطئة.");
+                    }
+                };
+                optionsDiv.appendChild(div);
+            });
+        }
+        getQuiz();
+    </script>
+</body>
+</html>

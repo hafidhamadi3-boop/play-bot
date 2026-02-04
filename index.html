@@ -3,56 +3,198 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>X-Pay Game Center</title>
+    <title>X-Pay Pro Gaming</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { background: #0f0f0f; color: white; font-family: sans-serif; text-align: center; padding: 15px; margin: 0; }
-        .header { background: #1e1e1e; padding: 20px; border-radius: 0 0 20px 20px; margin-bottom: 20px; border-bottom: 3px solid #0088cc; }
-        .stats { display: flex; justify-content: space-around; background: #252525; padding: 10px; border-radius: 12px; margin-top: 10px; }
-        .game-card { background: #1e1e1e; border-radius: 15px; padding: 20px; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; border: 1px solid #333; cursor: pointer; }
-        .game-info { text-align: right; flex-grow: 1; margin-right: 15px; }
-        .game-icon { font-size: 35px; }
-        .play-btn { background: #0088cc; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: bold; }
-        h2 { margin: 0; color: #0088cc; }
+        :root {
+            --glass: rgba(255, 255, 255, 0.1);
+            --accent: #00d2ff;
+            --bg: #050505;
+        }
+
+        body {
+            background: radial-gradient(circle at top, #1a1a2e, var(--bg));
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        /* شريط علوي احترافي */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: var(--glass);
+            backdrop-filter: blur(15px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .profile-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid var(--accent);
+            box-shadow: 0 0 10px var(--accent);
+        }
+
+        .stats-pill {
+            background: rgba(0,0,0,0.5);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            border: 1px solid var(--accent);
+        }
+
+        /* قائمة الألعاب 3D */
+        .games-grid {
+            padding: 20px;
+            display: grid;
+            gap: 20px;
+        }
+
+        .game-card-3d {
+            background: linear-gradient(145deg, #1e1e2e, #11111d);
+            border-radius: 20px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            transition: transform 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .game-card-3d:active {
+            transform: scale(0.95) translateY(5px);
+        }
+
+        .game-icon-3d {
+            font-size: 40px;
+            filter: drop-shadow(0 5px 15px rgba(0,210,255,0.4));
+        }
+
+        .game-details b { font-size: 18px; color: var(--accent); }
+        .timer { font-size: 12px; color: #ff4757; margin-top: 5px; }
+
+        /* نافذة الإعدادات */
+        .modal {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: #161625;
+            border-radius: 30px 30px 0 0;
+            padding: 30px 20px;
+            z-index: 2000;
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
+        }
+
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #222;
+        }
+
+        .btn-play {
+            background: linear-gradient(to right, #00d2ff, #3a7bd5);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 12px;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,210,255,0.3);
+        }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h2>🎮 مركز ألعاب X-Pay</h2>
-        <div class="stats">
-            <span>💎 النقاط: <b id="user-points">0</b></span>
-            <span>❤️ القلوب: <b id="user-lives">3</b></span>
+
+    <div class="top-bar">
+        <div class="profile-section" onclick="openProfile()">
+            <img src="https://cdn-icons-png.flaticon.com/512/64/64572.png" class="avatar" id="user-avatar">
+            <div>
+                <div style="font-size: 12px; color: #aaa;">لاعب X-Pay</div>
+                <div class="stats-pill">💎 <span id="points">1,250</span></div>
+            </div>
+        </div>
+        <div onclick="toggleSettings()"><i class="fas fa-cog fa-lg"></i></div>
+    </div>
+
+    <div class="games-grid">
+        <div class="game-card-3d" onclick="location.href='spin.html'">
+            <div class="game-icon-3d">🎡</div>
+            <div class="game-details">
+                <b>عجلة الحظ الملكية</b><br>
+                <span>القلوب: ❤️ 3/3</span>
+                <div class="timer">استعادة خلال: 04:59</div>
+            </div>
+            <button class="btn-play" style="margin-right: auto;">إلعب</button>
+        </div>
+
+        <div class="game-card-3d" onclick="location.href='quiz.html'">
+            <div class="game-icon-3d">🧠</div>
+            <div class="game-details">
+                <b>تحدي العباقرة</b><br>
+                <span>القلوب: ❤️ 5/5</span>
+                <div class="timer" style="color:#2ed573">جاهز للعب الآن</div>
+            </div>
+            <button class="btn-play" style="margin-right: auto;">إلعب</button>
         </div>
     </div>
 
-    <div class="game-card" onclick="location.href='spin.html'">
-        <div class="game-icon">🎡</div>
-        <div class="game-info">
-            <b>عجلة الحظ</b><br><small>اربح جوائز فورية كل يوم</small>
+    <div id="settingsModal" class="modal">
+        <h3 style="text-align:center; margin-top:0;">⚙️ الإعدادات</h3>
+        <div class="setting-row">
+            <span>اللغة / Language</span>
+            <select style="background:#222; color:white; border:none; padding:5px; border-radius:5px;">
+                <option>العربية</option>
+                <option>English</option>
+                <option>Français</option>
+            </select>
         </div>
-        <button class="play-btn">العب</button>
-    </div>
-
-    <div class="game-card" onclick="location.href='quiz.html'">
-        <div class="game-icon">🧠</div>
-        <div class="game-info">
-            <b>تحدي المعلومات</b><br><small>أجب واجمع نقاط XPAY</small>
+        <div class="setting-row">
+            <span>المؤثرات الصوتية</span>
+            <input type="checkbox" checked>
         </div>
-        <button class="play-btn">العب</button>
-    </div>
-
-    <div class="game-card" onclick="location.href='leaderboard.html'">
-        <div class="game-icon">🏆</div>
-        <div class="game-info">
-            <b>لوحة الشرف</b><br><small>قائمة أغنى اللاعبين</small>
+        <div class="setting-row">
+            <span>الاهتزاز (Haptic)</span>
+            <input type="checkbox" checked>
         </div>
-        <button class="play-btn">عرض</button>
+        <button onclick="toggleSettings()" style="width:100%; padding:15px; border-radius:15px; border:none; background:var(--accent); color:white; font-weight:bold;">حفظ وإغلاق</button>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
-        // سيتم ربط النقاط والقلوب لاحقاً عبر عنوان URL
+
+        function toggleSettings() {
+            const modal = document.getElementById('settingsModal');
+            modal.style.display = modal.style.display === 'block' ? 'none' : 'block';
+            tg.HapticFeedback.impactOccurred('medium');
+        }
+
+        function openProfile() {
+            tg.showPopup({
+                title: 'الملف الشخصي',
+                message: 'يمكنك تغيير اسمك المستعار مرة كل 30 يوم.',
+                buttons: [{text: 'تغيير الاسم', type: 'default'}, {text: 'إغلاق', type: 'destructive'}]
+            });
+        }
     </script>
 </body>
 </html>

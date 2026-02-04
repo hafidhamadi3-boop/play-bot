@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>X-Pay: The Future of Mining & Gaming</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="languages.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -17,7 +18,6 @@
             --glass: rgba(255, 255, 255, 0.08);
         }
 
-        /* تحريك الخلفية لتبدو حية */
         body {
             background: linear-gradient(-45deg, #050507, #0b0b1a, #050507);
             background-size: 400% 400%;
@@ -35,7 +35,6 @@
             100% { background-position: 0% 50%; }
         }
 
-        /* شريط الأخبار المتحرك (Ticker) */
         .news-ticker {
             background: rgba(0, 210, 255, 0.1);
             color: var(--accent);
@@ -54,7 +53,6 @@
             100% { transform: translateX(100%); }
         }
 
-        /* شريط التنقل العلوي */
         .top-nav {
             display: flex;
             justify-content: space-between;
@@ -67,7 +65,6 @@
             z-index: 1000;
         }
 
-        /* أيقونة الشات العائمة */
         .chat-fab {
             position: fixed;
             bottom: 80px;
@@ -91,7 +88,6 @@
             100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 210, 255, 0); }
         }
 
-        /* مركز الأخبار والفيديو */
         .news-hub {
             margin: 15px;
             border-radius: 20px;
@@ -114,7 +110,6 @@
             text-align: center;
         }
 
-        /* قسم التعدين المطور */
         .mining-card {
             margin: 15px;
             padding: 25px;
@@ -137,7 +132,6 @@
         }
         .claim-btn:active { transform: scale(0.9); }
 
-        /* شريط النشاط المباشر */
         .live-activity {
             background: rgba(0, 0, 0, 0.5);
             padding: 8px;
@@ -150,7 +144,6 @@
             z-index: 100;
         }
 
-        /* القائمة الجانبية المصممة كـ Super App */
         .sidebar {
             position: fixed;
             top: 0;
@@ -182,7 +175,6 @@
             transition: 0.3s;
         }
 
-        /* نافذة الشات */
         .chat-window {
             position: fixed;
             bottom: -100%;
@@ -198,7 +190,6 @@
         }
         .chat-window.active { bottom: 0; }
 
-        /* تأثير العملات المتساقطة */
         .coin {
             position: fixed;
             z-index: 3000;
@@ -209,19 +200,54 @@
         @keyframes fall {
             to { transform: translateY(100vh) rotate(360deg); opacity: 0; }
         }
+
+        .leaderboard-fab {
+            position: fixed;
+            bottom: 155px;
+            left: 20px;
+            width: 55px;
+            height: 55px;
+            background: linear-gradient(45deg, #ffd700, #ffa500);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+            z-index: 998;
+            cursor: pointer;
+            animation: float 3s ease-in-out infinite;
+            color: white;
+            font-size: 24px;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* تنسيق قائمة اللغات */
+        #langSelector {
+            background: #1a1a2e;
+            color: white;
+            border: 1px solid var(--accent);
+            border-radius: 8px;
+            padding: 8px;
+            width: 100%;
+            font-family: 'Cairo';
+            outline: none;
+        }
     </style>
 </head>
 <body>
 
     <div class="news-ticker">
-        <div class="ticker-content">
-            🔥 إطلاق عملة XPC قريباً.. استعدوا للثراء! | 🚀 مبروك "أحمد" ربح 1000 نقطة اليوم | 💡 نصيحة: استثمر نقاط التعدين في تطوير سرعتك | 💎 X-Pay: مجتمع الطموحين الأول..
+        <div class="ticker-content" id="ticker-text">
+            🔥 إطلاق عملة XPC قريباً.. استعدوا للثراء! | 🚀 مبروك "أحمد" ربح 1000 نقطة اليوم | 💎 X-Pay: مجتمع الطموحين الأول..
         </div>
     </div>
 
     <div class="top-nav">
         <i class="fas fa-bars fa-lg" onclick="toggleMenu()" style="color: var(--accent);"></i>
-        <div style="font-weight: bold; letter-spacing: 2px; font-size: 20px;">X-PAY <span style="color: var(--accent);">PRO</span></div>
+        <div style="font-weight: bold; letter-spacing: 2px; font-size: 20px;" data-i18n="welcome">X-PAY PRO</div>
         <div class="notifications"><i class="fas fa-bell fa-lg"></i></div>
     </div>
 
@@ -229,36 +255,36 @@
         <div class="video-container" onclick="playPromo()">
             <div class="video-placeholder">
                 <i class="fas fa-play-circle fa-4x" style="color: var(--accent); opacity: 0.8;"></i>
-                <p>شاهد كيف تضاعف أرباحك (10+ نقاط)</p>
+                <p data-i18n="watch_video">شاهد كيف تضاعف أرباحك (10+ نقاط)</p>
             </div>
-            </div>
+        </div>
         <div style="padding: 15px; background: rgba(255,255,255,0.03);">
-            <small style="color: var(--accent);">آخر الأخبار:</small>
+            <small style="color: var(--accent);" data-i18n="latest_news">آخر الأخبار:</small>
             <p style="margin: 5px 0 0; font-size: 14px;">بدء مرحلة التحويل التجريبي للعملات للمستوى 10 فما فوق!</p>
         </div>
     </div>
 
     <div class="mining-card">
-        <h4 style="margin: 0; color: #888;">طاقة التعدين الحالية</h4>
+        <h4 style="margin: 0; color: #888;" data-i18n="mining_power">طاقة التعدين الحالية</h4>
         <div style="font-size: 32px; font-weight: bold; margin: 10px 0; color: var(--accent);">
             <span id="mining-val">0.00542</span> <small style="font-size: 14px;">XPC/H</small>
         </div>
         <div style="width: 100%; height: 6px; background: #222; border-radius: 3px; overflow: hidden;">
             <div style="width: 65%; height: 100%; background: var(--accent); box-shadow: 0 0 10px var(--accent);"></div>
         </div>
-        <button class="claim-btn" onclick="claimRewards(event)">جمع الأرباح (Claim)</button>
+        <button class="claim-btn" onclick="claimRewards(event)" data-i18n="claim">جمع الأرباح (Claim)</button>
     </div>
 
-    <h4 style="margin: 20px 20px 10px;">🎮 استثمر وقتك</h4>
+    <h4 style="margin: 20px 20px 10px;" data-i18n="games_title">🎮 استثمر وقتك</h4>
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 0 15px 100px;">
         <div class="game-card" onclick="location.href='spin.html'">
             <div style="font-size: 40px; margin-bottom: 10px;">🎡</div>
-            <b>عجلة الحظ</b><br>
+            <b data-i18n="luck_wheel">عجلة الحظ</b><br>
             <small style="color: #ff4757;">❤️ 3 محاولات</small>
         </div>
         <div class="game-card" onclick="location.href='quiz.html'">
             <div style="font-size: 40px; margin-bottom: 10px;">🧠</div>
-            <b>تحدي الذكاء</b><br>
+            <b data-i18n="quiz_game">تحدي الذكاء</b><br>
             <small style="color: #2ed573;">اربح الآن</small>
         </div>
     </div>
@@ -272,25 +298,38 @@
         </div>
 
         <div class="wallet-card">
-            <h4 style="margin: 0 0 15px; color: var(--accent);"><i class="fas fa-wallet"></i> المحفظة المركزية</h4>
+            <h4 style="margin: 0 0 15px; color: var(--accent);"><i class="fas fa-wallet"></i> <span data-i18n="wallet">المحفظة المركزية</span></h4>
             <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                <span>نقاط الألعاب:</span> <b id="play-pts">450</b>
+                <span data-i18n="game_pts">نقاط الألعاب:</span> <b id="play-pts">450</b>
             </div>
             <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                <span>حصيلة التعدين:</span> <b id="mine-pts">1,200</b>
+                <span data-i18n="mine_pts">حصيلة التعدين:</span> <b id="mine-pts">1,200</b>
             </div>
             <hr style="border: 0; border-top: 1px solid #333;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <span>رصيد XPC:</span> <b style="color: var(--gold); font-size: 20px;">25.5</b>
             </div>
-            <button class="claim-btn" style="width: 100%; font-size: 14px; padding: 8px;">تحويل النقاط لعملات 🔄</button>
+            <button class="claim-btn" style="width: 100%; font-size: 14px; padding: 8px;" data-i18n="convert">تحويل النقاط 🔄</button>
         </div>
 
         <div class="menu-items">
-            <div style="padding: 15px 0; border-bottom: 1px solid #222;"><i class="fas fa-user-edit"></i> تعديل الملف الشخصي</div>
-            <div style="padding: 15px 0; border-bottom: 1px solid #222;"><i class="fas fa-store"></i> المتجر (شراء محاولات)</div>
-            <div style="padding: 15px 0; border-bottom: 1px solid #222;"><i class="fas fa-language"></i> اللغة: العربية</div>
-            <div style="padding: 15px 0;"><i class="fas fa-headset"></i> الدعم الفني</div>
+            <div style="padding: 15px 0; border-bottom: 1px solid #222;">
+                <i class="fas fa-language"></i> <span data-i18n="language_label">اللغة</span>
+                <div style="margin-top: 10px;">
+                    <select id="langSelector" onchange="changeLanguage(this.value)">
+                        <option value="ar">🇸🇦 العربية</option>
+                        <option value="en">🇺🇸 English</option>
+                        <option value="fr">🇫🇷 Français</option>
+                        <option value="es">🇪🇸 Español</option>
+                        <option value="zh">🇨🇳 中文</option>
+                        <option value="ru">🇷🇺 Русский</option>
+                        <option value="hi">🇮🇳 हिन्दी</option>
+                    </select>
+                </div>
+            </div>
+            <div style="padding: 15px 0; border-bottom: 1px solid #222;"><i class="fas fa-user-edit"></i> <span data-i18n="edit_profile">تعديل الملف</span></div>
+            <div style="padding: 15px 0; border-bottom: 1px solid #222;"><i class="fas fa-store"></i> <span data-i18n="store">المتجر</span></div>
+            <div style="padding: 15px 0;"><i class="fas fa-headset"></i> <span data-i18n="support">الدعم الفني</span></div>
         </div>
     </div>
 
@@ -300,11 +339,10 @@
             <i class="fas fa-times" onclick="toggleChat()"></i>
         </div>
         <div id="chat-messages" style="height: 80%; overflow-y: auto; padding: 15px 0;">
-            <div style="margin-bottom: 10px;"><small style="color: var(--accent);">باسم:</small> يا شباب متى موعد الإدراج؟</div>
-            <div style="margin-bottom: 10px;"><small style="color: var(--neon-purple);">نظام:</small> مبروك "سارة" ربحت 10 عملات!</div>
+            <div style="margin-bottom: 10px;"><small style="color: var(--accent);">باسم:</small> متى الإدراج؟</div>
         </div>
         <div style="display: flex; gap: 10px;">
-            <input type="text" placeholder="اكتب رسالتك..." style="flex: 1; background: #222; border: none; border-radius: 10px; color: white; padding: 10px;">
+            <input type="text" placeholder="..." style="flex: 1; background: #222; border: none; border-radius: 10px; color: white; padding: 10px;">
             <button style="background: var(--accent); border: none; border-radius: 10px; padding: 0 15px;"><i class="fas fa-paper-plane"></i></button>
         </div>
     </div>
@@ -313,14 +351,38 @@
         <i class="fas fa-comments fa-2x"></i>
     </div>
 
+    <div class="leaderboard-fab" onclick="window.location.href='leaderboard.html'">
+        <i class="fas fa-trophy"></i>
+    </div>
+
     <div class="live-activity" id="live-activity">
-        👤 4,250 مستخدم نشط الآن | ⛏️ جاري تعدين 12.5 XPC في هذه اللحظة...
+        👤 4,250 مستخدم نشط الآن | ⛏️ جاري تعدين 12.5 XPC...
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
 
+        // نظام اللغات
+        function changeLanguage(lang) {
+            if (typeof translations === 'undefined') return;
+            const data = translations[lang];
+            
+            document.documentElement.dir = data.dir;
+            document.documentElement.lang = lang;
+
+            document.querySelectorAll('[data-i18n]').forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                if (data[key]) {
+                    element.innerText = data[key];
+                }
+            });
+
+            localStorage.setItem('preferredLang', lang);
+            tg.HapticFeedback.impactOccurred('medium');
+        }
+
+        // الوظائف الأساسية
         function toggleMenu() {
             document.getElementById('sidebar').classList.toggle('active');
             tg.HapticFeedback.impactOccurred('medium');
@@ -332,12 +394,11 @@
         }
 
         function claimRewards(e) {
-            // تأثير العملات المتساقطة
             for(let i=0; i<15; i++) {
                 createCoin(e.clientX || window.innerWidth/2, e.clientY || window.innerHeight/2);
             }
             tg.HapticFeedback.notificationOccurred('success');
-            tg.showAlert("تم جمع أرباح التعدين بنجاح! 🚀");
+            tg.showAlert("Success! Points added.");
         }
 
         function createCoin(x, y) {
@@ -346,27 +407,33 @@
             coin.innerHTML = '💎';
             coin.style.left = x + 'px';
             coin.style.top = y + 'px';
-            coin.style.left = (Math.random() * window.innerWidth) + 'px';
             document.body.appendChild(coin);
             setTimeout(() => coin.remove(), 1000);
         }
 
         function playPromo() {
-            tg.showConfirm("شاهد الفيديو الترويجي لزيادة سرعة التعدين؟", (ok) => {
-                if(ok) tg.showAlert("جاري تحميل الفيديو.. احصل على مكافأتك بعد المشاهدة!");
+            tg.showConfirm("Watch video?", (ok) => {
+                if(ok) tg.showAlert("Loading...");
             });
         }
 
-        // سحب البيانات الحقيقية من تلجرام
-        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-            const user = tg.initDataUnsafe.user;
-            document.getElementById('username_side').innerText = user.first_name;
-        }
+        // التهيئة عند التشغيل
+        window.onload = () => {
+            const savedLang = localStorage.getItem('preferredLang') || 'ar';
+            document.getElementById('langSelector').value = savedLang;
+            // نتأكد من تحميل ملف الترجمة قبل التنفيذ
+            if (typeof translations !== 'undefined') {
+                changeLanguage(savedLang);
+            }
 
-        // محاكاة نشاط مباشر متغير
+            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                document.getElementById('username_side').innerText = tg.initDataUnsafe.user.first_name;
+            }
+        };
+
         setInterval(() => {
-            const users = Math.floor(Math.random() * (5000 - 4000) + 4000);
-            document.getElementById('live-activity').innerText = `👤 ${users.toLocaleString()} مستخدم نشط الآن | ⛏️ جاري تعدين ${(Math.random()*20).toFixed(1)} XPC في هذه اللحظة...`;
+            const users = Math.floor(Math.random() * 1000 + 4000);
+            document.getElementById('live-activity').innerText = `👤 ${users.toLocaleString()} | ⛏️ ${(Math.random()*20).toFixed(1)} XPC...`;
         }, 5000);
     </script>
 </body>

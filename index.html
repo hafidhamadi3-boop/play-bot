@@ -3,239 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>X-Pay: The Future of Mining & Gaming</title>
+    <title>X-PAY PRO | Future of Mining</title>
+    
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="languages.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg: #050507;
-            --card-bg: rgba(22, 22, 30, 0.8);
-            --accent: #00d2ff;
-            --neon-purple: #9d50bb;
-            --gold: #ffcf4b;
-            --glass: rgba(255, 255, 255, 0.08);
-        }
-
-        body {
-            background: linear-gradient(-45deg, #050507, #0b0b1a, #050507);
-            background-size: 400% 400%;
-            animation: gradientBG 15s ease infinite;
-            color: white;
-            font-family: 'Cairo', sans-serif;
-            margin: 0;
-            overflow-x: hidden;
-            user-select: none;
-        }
-
-        @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        .news-ticker {
-            background: rgba(0, 210, 255, 0.1);
-            color: var(--accent);
-            white-space: nowrap;
-            overflow: hidden;
-            padding: 5px 0;
-            font-size: 13px;
-            border-bottom: 1px solid rgba(0, 210, 255, 0.2);
-        }
-        .ticker-content {
-            display: inline-block;
-            animation: ticker 25s linear infinite;
-        }
-        @keyframes ticker {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
-        }
-
-        .top-nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 20px;
-            background: rgba(10, 10, 15, 0.8);
-            backdrop-filter: blur(15px);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
-
-        .chat-fab {
-            position: fixed;
-            bottom: 80px;
-            left: 20px;
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(45deg, var(--accent), var(--neon-purple));
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 0 20px var(--accent);
-            z-index: 999;
-            animation: pulse 2s infinite;
-            cursor: pointer;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 210, 255, 0.7); }
-            70% { transform: scale(1.1); box-shadow: 0 0 0 15px rgba(0, 210, 255, 0); }
-            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 210, 255, 0); }
-        }
-
-        .news-hub {
-            margin: 15px;
-            border-radius: 20px;
-            overflow: hidden;
-            background: var(--card-bg);
-            border: 1px solid var(--glass);
-        }
-        .video-container {
-            width: 100%;
-            aspect-ratio: 16/9;
-            background: #000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-        }
-        .video-placeholder {
-            position: absolute;
-            color: white;
-            text-align: center;
-        }
-
-        .mining-card {
-            margin: 15px;
-            padding: 25px;
-            background: radial-gradient(circle at top right, rgba(0, 210, 255, 0.1), transparent);
-            border-radius: 25px;
-            border: 1px solid rgba(0, 210, 255, 0.2);
-            text-align: center;
-        }
-        .claim-btn {
-            background: linear-gradient(to right, #00d2ff, #3a7bd5);
-            border: none;
-            padding: 12px 50px;
-            border-radius: 30px;
-            color: white;
-            font-weight: bold;
-            font-size: 18px;
-            margin-top: 15px;
-            box-shadow: 0 10px 20px rgba(0, 210, 255, 0.3);
-            transition: 0.3s;
-        }
-        .claim-btn:active { transform: scale(0.9); }
-
-        .live-activity {
-            background: rgba(0, 0, 0, 0.5);
-            padding: 8px;
-            font-size: 11px;
-            color: #aaa;
-            text-align: center;
-            position: fixed;
-            bottom: 0;
-            width: 100%;
-            z-index: 100;
-        }
-
-        .sidebar {
-            position: fixed;
-            top: 0;
-            right: -100%;
-            width: 85%;
-            height: 100%;
-            background: #0a0a0f;
-            z-index: 2000;
-            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            padding: 25px;
-            box-sizing: border-box;
-        }
-        .sidebar.active { right: 0; }
-
-        .wallet-card {
-            background: linear-gradient(135deg, #1e1e2e, #11111d);
-            padding: 20px;
-            border-radius: 20px;
-            margin: 20px 0;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .game-card {
-            background: var(--card-bg);
-            border-radius: 20px;
-            padding: 20px;
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: 0.3s;
-        }
-
-        .chat-window {
-            position: fixed;
-            bottom: -100%;
-            left: 0;
-            width: 100%;
-            height: 70%;
-            background: #111118;
-            z-index: 2001;
-            transition: 0.4s;
-            border-radius: 30px 30px 0 0;
-            padding: 20px;
-            box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
-        }
-        .chat-window.active { bottom: 0; }
-
-        .coin {
-            position: fixed;
-            z-index: 3000;
-            font-size: 24px;
-            pointer-events: none;
-            animation: fall 1s linear forwards;
-        }
-        @keyframes fall {
-            to { transform: translateY(100vh) rotate(360deg); opacity: 0; }
-        }
-
-        .leaderboard-fab {
-            position: fixed;
-            bottom: 155px;
-            left: 20px;
-            width: 55px;
-            height: 55px;
-            background: linear-gradient(45deg, #ffd700, #ffa500);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
-            z-index: 998;
-            cursor: pointer;
-            animation: float 3s ease-in-out infinite;
-            color: white;
-            font-size: 24px;
-        }
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-
-        /* تنسيق قائمة اللغات */
-        #langSelector {
-            background: #1a1a2e;
-            color: white;
-            border: 1px solid var(--accent);
-            border-radius: 8px;
-            padding: 8px;
-            width: 100%;
-            font-family: 'Cairo';
-            outline: none;
-        }
-    </style>
+    
+    <link rel="stylesheet" href="style.css">
+    <script src="languages.js"></script>
 </head>
 <body>
 
@@ -246,9 +21,11 @@
     </div>
 
     <div class="top-nav">
-        <i class="fas fa-bars fa-lg" onclick="toggleMenu()" style="color: var(--accent);"></i>
+        <i class="fas fa-bars fa-lg" onclick="toggleMenu()" style="color: var(--accent); cursor:pointer;"></i>
         <div style="font-weight: bold; letter-spacing: 2px; font-size: 20px;" data-i18n="welcome">X-PAY PRO</div>
-        <div class="notifications"><i class="fas fa-bell fa-lg"></i></div>
+        <div class="notifications" onclick="scrollToGames()" style="cursor:pointer;">
+            <i class="fas fa-gamepad fa-lg" style="color: var(--accent);"></i>
+        </div>
     </div>
 
     <div class="news-hub">
@@ -275,8 +52,16 @@
         <button class="claim-btn" onclick="claimRewards(event)" data-i18n="claim">جمع الأرباح (Claim)</button>
     </div>
 
+    <div id="games-section" class="games-promo" onclick="scrollToGames()">
+        <img src="https://img.freepik.com/premium-photo/gaming-concept-joystick-surrounded-by-abstract-shapes-neon-lights_916626-2675.jpg" class="promo-img">
+        <div class="promo-overlay">
+            <h2 data-i18n="play_earn_big">إلعب واكسب نقاط مضاعفة! 🎮</h2>
+            <p data-i18n="click_to_explore">اضغط لاستكشاف عالم الألعاب والنشاطات</p>
+        </div>
+    </div>
+
     <h4 style="margin: 20px 20px 10px;" data-i18n="games_title">🎮 استثمر وقتك</h4>
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 0 15px 100px;">
+    <div id="games-list" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 0 15px 120px;">
         <div class="game-card" onclick="location.href='spin.html'">
             <div style="font-size: 40px; margin-bottom: 10px;">🎡</div>
             <b data-i18n="luck_wheel">عجلة الحظ</b><br>
@@ -285,12 +70,12 @@
         <div class="game-card" onclick="location.href='quiz.html'">
             <div style="font-size: 40px; margin-bottom: 10px;">🧠</div>
             <b data-i18n="quiz_game">تحدي الذكاء</b><br>
-            <small style="color: #2ed573;">اربح الآن</small>
+            <small style="color: #2ed573;" data-i18n="ready_now">جاهز الآن</small>
         </div>
     </div>
 
     <div class="sidebar" id="sidebar">
-        <div style="text-align: left;"><i class="fas fa-times fa-2x" onclick="toggleMenu()"></i></div>
+        <div style="text-align: left;"><i class="fas fa-times fa-2x" onclick="toggleMenu()" style="cursor:pointer;"></i></div>
         <div style="text-align: center; margin-top: 10px;">
             <img src="https://cdn-icons-png.flaticon.com/512/64/64572.png" style="width: 80px; border: 3px solid var(--accent); border-radius: 50%;">
             <h3 id="username_side" style="margin: 10px 0;">لاعب طموح</h3>
@@ -321,22 +106,20 @@
                         <option value="en">🇺🇸 English</option>
                         <option value="fr">🇫🇷 Français</option>
                         <option value="es">🇪🇸 Español</option>
-                        <option value="zh">🇨🇳 中文</option>
                         <option value="ru">🇷🇺 Русский</option>
-                        <option value="hi">🇮🇳 हिन्दी</option>
                     </select>
                 </div>
             </div>
-            <div style="padding: 15px 0; border-bottom: 1px solid #222;"><i class="fas fa-user-edit"></i> <span data-i18n="edit_profile">تعديل الملف</span></div>
-            <div style="padding: 15px 0; border-bottom: 1px solid #222;"><i class="fas fa-store"></i> <span data-i18n="store">المتجر</span></div>
-            <div style="padding: 15px 0;"><i class="fas fa-headset"></i> <span data-i18n="support">الدعم الفني</span></div>
+            <div style="padding: 15px 0; border-bottom: 1px solid #222; cursor:pointer;"><i class="fas fa-user-edit"></i> <span data-i18n="edit_profile">تعديل الملف</span></div>
+            <div style="padding: 15px 0; border-bottom: 1px solid #222; cursor:pointer;"><i class="fas fa-store"></i> <span data-i18n="store">المتجر</span></div>
+            <div style="padding: 15px 0; cursor:pointer;"><i class="fas fa-headset"></i> <span data-i18n="support">الدعم الفني</span></div>
         </div>
     </div>
 
     <div class="chat-window" id="chat-window">
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 10px;">
             <b style="color: var(--accent);">💬 الدردشة العالمية (Trollbox)</b>
-            <i class="fas fa-times" onclick="toggleChat()"></i>
+            <i class="fas fa-times" onclick="toggleChat()" style="cursor:pointer;"></i>
         </div>
         <div id="chat-messages" style="height: 80%; overflow-y: auto; padding: 15px 0;">
             <div style="margin-bottom: 10px;"><small style="color: var(--accent);">باسم:</small> متى الإدراج؟</div>
@@ -359,82 +142,6 @@
         👤 4,250 مستخدم نشط الآن | ⛏️ جاري تعدين 12.5 XPC...
     </div>
 
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
-
-        // نظام اللغات
-        function changeLanguage(lang) {
-            if (typeof translations === 'undefined') return;
-            const data = translations[lang];
-            
-            document.documentElement.dir = data.dir;
-            document.documentElement.lang = lang;
-
-            document.querySelectorAll('[data-i18n]').forEach(element => {
-                const key = element.getAttribute('data-i18n');
-                if (data[key]) {
-                    element.innerText = data[key];
-                }
-            });
-
-            localStorage.setItem('preferredLang', lang);
-            tg.HapticFeedback.impactOccurred('medium');
-        }
-
-        // الوظائف الأساسية
-        function toggleMenu() {
-            document.getElementById('sidebar').classList.toggle('active');
-            tg.HapticFeedback.impactOccurred('medium');
-        }
-
-        function toggleChat() {
-            document.getElementById('chat-window').classList.toggle('active');
-            tg.HapticFeedback.impactOccurred('light');
-        }
-
-        function claimRewards(e) {
-            for(let i=0; i<15; i++) {
-                createCoin(e.clientX || window.innerWidth/2, e.clientY || window.innerHeight/2);
-            }
-            tg.HapticFeedback.notificationOccurred('success');
-            tg.showAlert("Success! Points added.");
-        }
-
-        function createCoin(x, y) {
-            const coin = document.createElement('div');
-            coin.className = 'coin';
-            coin.innerHTML = '💎';
-            coin.style.left = x + 'px';
-            coin.style.top = y + 'px';
-            document.body.appendChild(coin);
-            setTimeout(() => coin.remove(), 1000);
-        }
-
-        function playPromo() {
-            tg.showConfirm("Watch video?", (ok) => {
-                if(ok) tg.showAlert("Loading...");
-            });
-        }
-
-        // التهيئة عند التشغيل
-        window.onload = () => {
-            const savedLang = localStorage.getItem('preferredLang') || 'ar';
-            document.getElementById('langSelector').value = savedLang;
-            // نتأكد من تحميل ملف الترجمة قبل التنفيذ
-            if (typeof translations !== 'undefined') {
-                changeLanguage(savedLang);
-            }
-
-            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-                document.getElementById('username_side').innerText = tg.initDataUnsafe.user.first_name;
-            }
-        };
-
-        setInterval(() => {
-            const users = Math.floor(Math.random() * 1000 + 4000);
-            document.getElementById('live-activity').innerText = `👤 ${users.toLocaleString()} | ⛏️ ${(Math.random()*20).toFixed(1)} XPC...`;
-        }, 5000);
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>

@@ -40,55 +40,32 @@ function checkAdminPrivileges() {
 /**
  * فتح نافذة إضافة منشور مع دعم رفع الملفات (صور/فيديو)
  */
-async function openPostModal() {
+function openPostModal() {
     const title = prompt("عنوان الخبر:");
     const excerpt = prompt("وصف مختصر:");
-    
-    if (!title || !excerpt) return;
+    const imageURL = prompt("ضع رابط الصورة المباشر هنا (مثل رابط من imgbb أو postimages):", "https://");
 
-    // إنشاء عنصر اختيار ملف برمجياً
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = 'image/*,video/*'; 
-    
-    fileInput.onchange = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        tg.showScanQrPopup({ text: "جاري رفع الملف... انتظر قليلاً ⏳" }); // تنبيه بصري
-
-        try {
-            // 1. رفع الملف إلى Firebase Storage
-            const fileName = `${Date.now()}_${file.name}`;
-            const storageRef = storage.ref(`posts/${fileName}`);
-            const uploadTask = await storageRef.put(file);
-            
-            // 2. الحصول على رابط التحميل المباشر
-            const downloadURL = await storageRef.getDownloadURL();
-
-            // 3. حفظ البيانات في Realtime Database
-            const postsRef = db.ref('posts');
-            const newPostRef = postsRef.push();
-            
-            await newPostRef.set({
-                title: title,
-                excerpt: excerpt,
-                image: downloadURL,
-                fileType: file.type, 
-                timestamp: Date.now(),
-                admin_id: ADMIN_ID,
-                tag: "UPDATE"
-            });
-
-            tg.closeScanQrPopup();
-            tg.showAlert("تم رفع الملف ونشر الخبر بنجاح! ✅");
-        } catch (error) {
-            console.error(error);
-            tg.showAlert("فشل الرفع: " + error.message);
-        }
-    };
-
-    fileInput.click(); // فتح استوديو الجهاز
+    // التحقق من أن جميع الحقول ممتلئة
+    if (title && excerpt && imageURL) {
+        // الإشارة لمجلد المنشورات في قاعدة البيانات
+        const postsRef = db.ref('posts'); 
+        
+        postsRef.push({
+            title: title,
+            excerpt: excerpt,
+            image: imageURL,
+            timestamp: Date.now(),
+            admin_id: ADMIN_ID,
+            tag: "NEWS" // يمكنك تغييرها يدوياً أو تركها هكذا
+        }).then(() => {
+            tg.showAlert("تم النشر بنجاح! سيظهر الخبر للجميع الآن. ✅");
+        }).catch((error) => {
+            console.error("Firebase Error:", error);
+            tg.showAlert("حدث خطأ أثناء الاتصال بقاعدة البيانات.");
+        });
+    } else {
+        tg.showAlert("يرجى ملء جميع الحقول للنشر.");
+    }
 }
 
 /**

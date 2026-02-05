@@ -258,22 +258,108 @@ body {
     box-shadow: 0 10px 20px rgba(0,0,0,0.3);
 }
 
-/* --- نافذة الدردشة --- */
+/* --- نافذة الدردشة الماركة (X-Messenger) --- */
 .chat-window {
     position: fixed;
     bottom: -100%;
     left: 0;
     width: 100%;
-    height: 70%;
-    background: #111118;
+    height: 80%; /* جعلناها أطول قليلاً لراحة العين */
+    background: #08080c; /* لون أعمق ليبرز الشعار */
     z-index: 2001;
-    transition: 0.4s;
+    transition: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     border-radius: 30px 30px 0 0;
     padding: 20px;
-    box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
+    box-shadow: 0 -10px 40px rgba(0,0,0,0.9);
     box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
 }
+
 .chat-window.active { bottom: 0; }
+
+/* حاوية الرسائل مع الخلفية المغناطيسية */
+#chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 10px;
+    position: relative;
+    scrollbar-width: none; /* إخفاء شريط التمرير للمظهر الجمالي */
+}
+
+/* شعار XPay الشفاف المتحرك في الخلفية */
+#chat-messages::before {
+    content: 'X';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 10rem;
+    font-family: 'Cairo', sans-serif;
+    color: var(--accent);
+    opacity: 0.05;
+    border: 6px solid var(--accent);
+    border-radius: 50%;
+    width: 220px; height: 220px;
+    display: flex; align-items: center; justify-content: center;
+    pointer-events: none;
+    animation: rotateX 20s infinite linear;
+}
+
+@keyframes rotateX {
+    from { transform: translate(-50%, -50%) rotate(0deg); }
+    to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* تصميم الفقاعات (ماسنجر ستايل) */
+.message {
+    max-width: 80%;
+    display: flex;
+    flex-direction: column;
+}
+
+.message.sent {
+    align-self: flex-end;
+    align-items: flex-end;
+}
+
+.message.received {
+    align-self: flex-start;
+    align-items: flex-start;
+}
+
+.msg-bubble {
+    padding: 12px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    position: relative;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.message.sent .msg-bubble {
+    background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+    color: white;
+    border-bottom-right-radius: 4px;
+}
+
+.message.received .msg-bubble {
+    background: #222;
+    color: #eee;
+    border-bottom-left-radius: 4px;
+}
+
+/* التفاعلات الصغيرة */
+.msg-reactions {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 2px 6px;
+    font-size: 12px;
+    margin-top: -8px;
+    z-index: 2;
+}
 
 /* --- الأزرار العائمة --- */
 .chat-fab, .leaderboard-fab {

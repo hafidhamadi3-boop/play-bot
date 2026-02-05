@@ -132,14 +132,39 @@ function createCoin(x, y) {
  */
 function toggleMenu() {
     const sidebar = document.getElementById('sidebar');
-    if (sidebar) sidebar.classList.toggle('active');
-    tg.HapticFeedback.impactOccurred('medium');
+    if (sidebar) {
+        sidebar.classList.toggle('active');
+        
+        // منع التمرير في الصفحة الرئيسية عند فتح القائمة الجانبية
+        if (sidebar.classList.contains('active')) {
+            document.body.style.overflow = 'hidden'; // قفل التمرير
+            document.body.style.touchAction = 'none'; // منع السحب في الخلفية
+        } else {
+            document.body.style.overflow = ''; // إعادة التمرير الطبيعي
+            document.body.style.touchAction = ''; 
+        }
+        
+        // اهتزاز الموبايل عند الفتح/الإغلاق
+        if (window.Telegram && window.Telegram.WebApp) {
+            window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+        }
+    }
 }
 
 function toggleChat() {
     const chat = document.getElementById('chat-window');
-    if (chat) chat.classList.toggle('active');
-    tg.HapticFeedback.impactOccurred('light');
+    if (chat) {
+        chat.classList.toggle('active');
+        
+        // اختيارياً: يمكنك قفل التمرير هنا أيضاً إذا كانت الدردشة لا تغطي الشاشة كاملة
+        if (chat.classList.contains('active')) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        
+        window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+    }
 }
 
 function scrollToGames() {

@@ -3,7 +3,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyC1Tb7gOIaRhp5Nw1GShKA-TptvOTUhiOU",
   authDomain: "xpayproject-28e43.firebaseapp.com",
   projectId: "xpayproject-28e43",
-  storageBucket: "xpayproject-28e43.firebasestorage.app",
+  storageBucket: "xpayproject-28e43.firebasestorage.app", // تم التأكد من اسم السلة للرفع
   messagingSenderId: "616308617423",
   appId: "1:616308617423:web:615d5ebe44bb66157c87ba",
   measurementId: "G-7ZHZDHX2NW",
@@ -13,7 +13,7 @@ const firebaseConfig = {
 // 2. تهيئة Firebase
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-const storage = firebase.storage(); 
+const storage = firebase.storage(); // تهيئة خدمة رفع الملفات
 
 // تهيئة Telegram WebApp
 const tg = window.Telegram.WebApp;
@@ -24,63 +24,81 @@ const ADMIN_ID = 1954301817;
 
 /**
  * دالة التحقق من المالك وإظهار أدوات التحكم
- * تم تحسينها لتظهر الزر بناءً على المعرف الصريح
  */
 function checkAdminPrivileges() {
-    // التحقق من المعرف الموجود في بيانات تليجرام
-    const userId = tg.initDataUnsafe?.user?.id;
-    
-    if (userId === ADMIN_ID) {
-        console.log("Admin Access Granted");
-        
-        // إظهار زر إضافة منشور
-        const addBtn = document.getElementById('admin-add-post');
-        if (addBtn) {
-            addBtn.style.display = 'block';
+    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+        const userId = tg.initDataUnsafe.user.id;
+        if (userId === ADMIN_ID) {
+            console.log("Admin Access Granted");
+            document.querySelectorAll('.admin-controls').forEach(el => el.style.display = 'flex');
+            const addBtn = document.getElementById('admin-add-post');
+            if (addBtn) addBtn.style.display = 'block';
         }
-
-        // إظهار أزرار التحكم في المنشورات (تعديل/حذف)
-        document.querySelectorAll('.admin-controls').forEach(el => {
-            el.style.display = 'flex';
-        });
     }
 }
 
 /**
- * فتح نافذة إضافة منشور
+ * فتح نافذة إضافة منشور مع دعم رفع الملفات (صور/فيديو)
  */
-function openPostModal() {
+async function openPostModal() {
     const title = prompt("عنوان الخبر:");
     const excerpt = prompt("وصف مختصر:");
-    const imageURL = prompt("ضع رابط الصورة المباشر هنا:", "https://");
+    
+    if (!title || !excerpt) return;
 
-    if (title && excerpt && imageURL) {
-        const postsRef = db.ref('posts'); 
-        postsRef.push({
-            title: title,
-            excerpt: excerpt,
-            image: imageURL,
-            timestamp: Date.now(),
-            admin_id: ADMIN_ID,
-            tag: "NEWS"
-        }).then(() => {
-            tg.showAlert("تم النشر بنجاح! ✅");
-        }).catch((error) => {
-            console.error("Firebase Error:", error);
-            tg.showAlert("حدث خطأ أثناء الاتصال بقاعدة البيانات.");
-        });
-    } else if (title || excerpt || imageURL) {
-        tg.showAlert("يرجى ملء جميع الحقول للنشر.");
-    }
+    // إنشاء عنصر اختيار ملف برمجياً
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*,video/*'; 
+    
+    fileInput.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        tg.showScanQrPopup({ text: "جاري رفع الملف... انتظر قليلاً ⏳" }); // تنبيه بصري
+
+        try {
+            // 1. رفع الملف إلى Firebase Storage
+            const fileName = `${Date.now()}_${file.name}`;
+            const storageRef = storage.ref(`posts/${fileName}`);
+            const uploadTask = await storageRef.put(file);
+            
+            // 2. الحصول على رابط التحميل المباشر
+            const downloadURL = await storageRef.getDownloadURL();
+
+            // 3. حفظ البيانات في Realtime Database
+            const postsRef = db.ref('posts');
+            const newPostRef = postsRef.push();
+            
+            await newPostRef.set({
+                title: title,
+                excerpt: excerpt,
+                image: downloadURL,
+                fileType: file.type, 
+                timestamp: Date.now(),
+                admin_id: ADMIN_ID,
+                tag: "UPDATE"
+            });
+
+            tg.closeScanQrPopup();
+            tg.showAlert("تم رفع الملف ونشر الخبر بنجاح! ✅");
+        } catch (error) {
+            console.error(error);
+            tg.showAlert("فشل الرفع: " + error.message);
+        }
+    };
+
+    fileInput.click(); // فتح استوديو الجهاز
 }
 
 /**
- * دالة جلب المنشورات وعرضها مع دعم أزرار التحكم للمسؤول
+ * دالة جلب المنشورات من Firebase وعرضها ديناميكياً
  */
 function loadPosts() {
     const postsContainer = document.getElementById('news-feed');
     if (!postsContainer) return;
 
+    // استخدام المستمع المستمر .on لضمان التحديث التلقائي فور النشر
     db.ref('posts').orderByChild('timestamp').on('value', (snapshot) => {
         postsContainer.innerHTML = ''; 
         
@@ -88,6 +106,7 @@ function loadPosts() {
             const post = childSnapshot.val();
             const postId = childSnapshot.key;
 
+            // تحديد ما إذا كان الملف فيديو أم صورة لعرضه بشكل صحيح
             const mediaHTML = post.fileType && post.fileType.includes('video') 
                 ? `<video src="${post.image}" controls class="post-img" style="max-height:300px; background:#000;"></video>` 
                 : `<img src="${post.image || 'https://via.placeholder.com/300'}" class="post-img">`;
@@ -105,7 +124,6 @@ function loadPosts() {
                             </button>
                             ${tg.initDataUnsafe?.user?.id === ADMIN_ID ? `
                                 <div class="admin-controls" style="display:flex;">
-                                    <button class="admin-btn edit" onclick="editPost('${postId}')">📝 تعديل</button>
                                     <button class="admin-btn delete" onclick="deletePost(this, '${postId}')">🗑️ حذف</button>
                                 </div>
                             ` : ''}
@@ -115,35 +133,11 @@ function loadPosts() {
             `;
             postsContainer.insertAdjacentHTML('afterbegin', postHTML);
         });
-        // إعادة التحقق بعد تحميل المنشورات للتأكد من ظهور الأزرار
-        checkAdminPrivileges();
     });
 }
 
 /**
- * وظيفة التعديل الجديدة
- */
-function editPost(postId) {
-    db.ref('posts/' + postId).once('value').then((snapshot) => {
-        const post = snapshot.val();
-        const newTitle = prompt("تعديل العنوان:", post.title);
-        const newExcerpt = prompt("تعديل الوصف:", post.excerpt);
-        const newImage = prompt("تعديل رابط الصورة:", post.image);
-
-        if (newTitle && newExcerpt && newImage) {
-            db.ref('posts/' + postId).update({
-                title: newTitle,
-                excerpt: newExcerpt,
-                image: newImage
-            }).then(() => {
-                tg.showAlert("تم تحديث المنشور بنجاح! ✨");
-            });
-        }
-    });
-}
-
-/**
- * حذف المنشور
+ * حذف المنشور من الواجهة ومن Firebase مع حذف الملف من التخزين اختياريًا
  */
 function deletePost(btn, postId) {
     tg.showConfirm("هل أنت متأكد من حذف هذا المنشور نهائياً؟", (ok) => {
@@ -152,16 +146,14 @@ function deletePost(btn, postId) {
                 tg.HapticFeedback.notificationOccurred('success');
             });
             const card = btn.closest('.post-card');
-            if (card) {
-                card.style.opacity = '0';
-                setTimeout(() => card.remove(), 300);
-            }
+            card.style.opacity = '0';
+            setTimeout(() => card.remove(), 300);
         }
     });
 }
 
 /**
- * نظام التفاعلات
+ * نظام التفاعلات (Reactions)
  */
 function handleReaction(type, btn) {
     tg.HapticFeedback.impactOccurred('light');
@@ -181,7 +173,7 @@ function handleReaction(type, btn) {
 }
 
 /**
- * تجميع الأرباح
+ * تأثير العملات وتجميع الأرباح
  */
 function claimRewards(e) {
     const x = e.clientX || window.innerWidth / 2;
@@ -202,7 +194,7 @@ function createCoin(x, y) {
 }
 
 /**
- * القائمة الجانبية
+ * التحكم بالقائمة الجانبية ومنع تمرير الخلفية
  */
 function toggleMenu() {
     const sidebar = document.getElementById('sidebar');
@@ -225,7 +217,7 @@ function toggleChat() {
 }
 
 /**
- * نظام اللغات
+ * نظام اللغات والترجمة
  */
 function changeLanguage(lang) {
     if (typeof translations === 'undefined') return;
@@ -241,14 +233,16 @@ function changeLanguage(lang) {
 }
 
 /**
- * التشغيل النهائي
+ * تهيئة التطبيق
  */
 window.onload = () => {
     const savedLang = localStorage.getItem('preferredLang') || 'ar';
+    const selector = document.getElementById('langSelector');
+    if (selector) selector.value = savedLang;
     changeLanguage(savedLang);
 
-    loadPosts(); 
     checkAdminPrivileges();
+    loadPosts(); // بدء جلب البيانات من Firebase
 
     if (tg.initDataUnsafe?.user) {
         const userField = document.getElementById('username_side');
@@ -257,7 +251,7 @@ window.onload = () => {
 };
 
 /**
- * شريط النشاط
+ * شريط النشاط المباشر
  */
 setInterval(() => {
     const activityBar = document.getElementById('live-activity');

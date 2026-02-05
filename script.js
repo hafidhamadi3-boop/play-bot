@@ -42,18 +42,24 @@ function checkAdminPrivileges() {
  * فتح نافذة إضافة منشور (إضافة ذكية لـ Firebase)
  */
 function openPostModal() {
-    const title = prompt("عنوان المنشور:");
-    const excerpt = prompt("وصف قصير:");
+    const title = prompt("عنوان الخبر:");
+    const excerpt = prompt("وصف مختصر:");
+    const imageURL = prompt("رابط الصورة (URL):", "https://via.placeholder.com/300");
+    const category = prompt("التصنيف (مثلاً: NEWS, UPDATE):", "NEWS");
+
     if (title && excerpt) {
+        // إرسال البيانات إلى Firebase
         const newPostRef = db.ref('posts').push();
         newPostRef.set({
             title: title,
             excerpt: excerpt,
-            timestamp: Date.now(),
-            likes: 0,
-            loves: 0
+            image: imageURL,
+            tag: category,
+            timestamp: Date.now()
         }).then(() => {
-            tg.showAlert("تم النشر بنجاح! 🚀");
+            tg.showAlert("تم النشر بنجاح! سيظهر الخبر فوراً.");
+        }).catch((error) => {
+            tg.showAlert("خطأ في النشر: " + error.message);
         });
     }
 }
@@ -223,3 +229,43 @@ setInterval(() => {
         activityBar.innerText = `👤 ${users} مستخدم نشط | ⛏️ تعدين ${mining} XPC...`;
     }
 }, 5000);
+
+// دالة جلب المنشورات من Firebase وعرضها
+function loadPosts() {
+    const postsContainer = document.getElementById('news-feed'); // تأكد أن هذا الـ ID موجود في HTML
+    if (!postsContainer) return;
+
+    db.ref('posts').orderByChild('timestamp').on('value', (snapshot) => {
+        postsContainer.innerHTML = ''; // تنظيف الحاوية قبل العرض
+        
+        snapshot.forEach((childSnapshot) => {
+            const post = childSnapshot.val();
+            const postId = childSnapshot.key;
+
+            const postHTML = `
+                <div class="post-card" id="post-${postId}">
+                    <img src="${post.image || 'https://via.placeholder.com/300'}" class="post-img">
+                    <div class="post-content">
+                        <span class="post-tag">${post.tag || 'NEWS'}</span>
+                        <h3 class="post-title">${post.title}</h3>
+                        <p class="post-excerpt">${post.excerpt}</p>
+                        <div class="post-footer">
+                            <button class="react-btn" onclick="handleReaction('like', this)">
+                                👍 <span class="reaction-count">0</span>
+                            </button>
+                            ${tg.initDataUnsafe?.user?.id === ADMIN_ID ? `
+                                <div class="admin-controls" style="display:flex;">
+                                    <button class="admin-btn delete" onclick="deletePost(this, '${postId}')">🗑️</button>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+            postsContainer.insertAdjacentHTML('afterbegin', postHTML);
+        });
+    });
+}
+
+// استدعاء الدالة عند تحميل الصفحة
+window.addEventListener('load', loadPosts);

@@ -2,11 +2,56 @@
 const tg = window.Telegram.WebApp;
 tg.expand();
 
+// --- إعدادات الإدارة (Admin Settings) ---
+// استبدل 123456789 برقم الـ ID الخاص بك (يمكنك الحصول عليه من بوت @userinfobot)
+const ADMIN_ID = 1954301817; 
+
+/**
+ * دالة التحقق من المالك وإظهار أدوات التحكم
+ */
+function checkAdminPrivileges() {
+    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+        const userId = tg.initDataUnsafe.user.id;
+
+        if (userId === ADMIN_ID) {
+            console.log("Admin Access Granted");
+            // إظهار أزرار التحكم (تعديل وحذف)
+            document.querySelectorAll('.admin-controls').forEach(el => {
+                el.style.display = 'flex';
+            });
+            // إظهار زر إضافة منشور جديد
+            const addBtn = document.querySelector('.admin-add-post');
+            if (addBtn) addBtn.style.display = 'block';
+        }
+    }
+}
+
+/**
+ * وظائف الإدارة
+ */
+function deletePost(btn) {
+    tg.showConfirm("هل أنت متأكد من حذف هذا المنشور؟", (ok) => {
+        if (ok) {
+            const card = btn.closest('.post-card');
+            card.style.opacity = '0';
+            card.style.transform = 'scale(0.8)';
+            setTimeout(() => {
+                card.remove();
+                tg.HapticFeedback.notificationOccurred('success');
+            }, 300);
+        }
+    });
+}
+
+function editPost(btn) {
+    tg.showAlert("سيتم فتح محرر المنشورات في التحديث القادم!");
+}
+
 /**
  * دالة الانتقال السلس لقسم الألعاب
  */
 function scrollToGames() {
-    const gameList = document.getElementById('games-section'); // تأكد أن الـ ID مطابق لما في HTML
+    const gameList = document.getElementById('games-section');
     if (gameList) {
         gameList.scrollIntoView({ behavior: 'smooth' });
         tg.HapticFeedback.impactOccurred('medium');
@@ -15,7 +60,6 @@ function scrollToGames() {
 
 /**
  * نظام تغيير اللغات العالمي
- * @param {string} lang - رمز اللغة المختارة (ar, en, etc.)
  */
 function changeLanguage(lang) {
     if (typeof translations === 'undefined') {
@@ -26,11 +70,9 @@ function changeLanguage(lang) {
     const data = translations[lang];
     if (!data) return;
 
-    // تحديث اتجاه الصفحة ولغتها
     document.documentElement.dir = data.dir;
     document.documentElement.lang = lang;
 
-    // ترجمة جميع العناصر التي تحمل الواسم [data-i18n]
     document.querySelectorAll('[data-i18n]').forEach(element => {
         const key = element.getAttribute('data-i18n');
         if (data[key]) {
@@ -38,7 +80,6 @@ function changeLanguage(lang) {
         }
     });
 
-    // حفظ الخيار في المتصفح واهتزاز خفيف
     localStorage.setItem('preferredLang', lang);
     tg.HapticFeedback.impactOccurred('medium');
 }
@@ -66,7 +107,6 @@ function toggleChat() {
  * نظام جمع الأرباح مع تأثير العملات المتساقطة
  */
 function claimRewards(e) {
-    // تحديد إحداثيات الضغطة لتوليد العملات منها
     const x = e.clientX || window.innerWidth / 2;
     const y = e.clientY || window.innerHeight / 2;
 
@@ -76,7 +116,6 @@ function claimRewards(e) {
     
     tg.HapticFeedback.notificationOccurred('success');
     
-    // رسالة نجاح مترجمة (اختيارية)
     const lang = localStorage.getItem('preferredLang') || 'ar';
     const alertMsg = lang === 'ar' ? "تمت إضافة الأرباح بنجاح! 💎" : "Success! Points added. 💎";
     tg.showAlert(alertMsg);
@@ -87,14 +126,11 @@ function createCoin(x, y) {
     coin.className = 'coin';
     coin.innerHTML = '💎';
     
-    // إضافة عشوائية بسيطة لمكان سقوط العملات
     const randomX = x + (Math.random() - 0.5) * 100;
     coin.style.left = randomX + 'px';
     coin.style.top = y + 'px';
     
     document.body.appendChild(coin);
-    
-    // حذف العنصر بعد انتهاء الأنيميشن
     setTimeout(() => coin.remove(), 1000);
 }
 
@@ -108,7 +144,6 @@ function playPromo() {
     tg.showConfirm(confirmTitle, (ok) => {
         if (ok) {
             tg.showAlert(lang === 'ar' ? "جاري تحميل الإعلان..." : "Loading Ad...");
-            // هنا يربط كود Adsgram مستقبلاً
         }
     });
 }
@@ -117,18 +152,18 @@ function playPromo() {
  * تهيئة التطبيق عند تحميل الصفحة
  */
 window.onload = () => {
-    // استعادة اللغة المفضلة
     const savedLang = localStorage.getItem('preferredLang') || 'ar';
     const selector = document.getElementById('langSelector');
     
     if (selector) selector.value = savedLang;
     
-    // تطبيق الترجمة فوراً
     if (typeof translations !== 'undefined') {
         changeLanguage(savedLang);
     }
 
-    // عرض اسم المستخدم من تيليجرام في القائمة الجانبية
+    // فحص صلاحيات الإدارة
+    checkAdminPrivileges();
+
     if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
         const userNameField = document.getElementById('username_side');
         if (userNameField) {
@@ -138,7 +173,7 @@ window.onload = () => {
 };
 
 /**
- * تحديث شريط النشاط المباشر بشكل دوري
+ * تحديث شريط النشاط المباشر
  */
 setInterval(() => {
     const lang = localStorage.getItem('preferredLang') || 'ar';

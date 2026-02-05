@@ -1,9 +1,24 @@
+// 1. إعدادات Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyC1Tb7gOIaRhp5Nw1GShKA-TptvOTUhiOU",
+  authDomain: "xpayproject-28e43.firebaseapp.com",
+  projectId: "xpayproject-28e43",
+  storageBucket: "xpayproject-28e43.firebasestorage.app",
+  messagingSenderId: "616308617423",
+  appId: "1:616308617423:web:615d5ebe44bb66157c87ba",
+  measurementId: "G-7ZHZDHX2NW",
+  databaseURL: "https://xpayproject-28e43-default-rtdb.firebaseio.com"
+};
+
+// 2. تهيئة Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
 // تهيئة Telegram WebApp
 const tg = window.Telegram.WebApp;
 tg.expand();
 
 // --- إعدادات الإدارة (Admin Settings) ---
-// استبدل 123456789 برقم الـ ID الخاص بك (يمكنك الحصول عليه من بوت @userinfobot)
 const ADMIN_ID = 1954301817; 
 
 /**
@@ -12,26 +27,47 @@ const ADMIN_ID = 1954301817;
 function checkAdminPrivileges() {
     if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
         const userId = tg.initDataUnsafe.user.id;
-
         if (userId === ADMIN_ID) {
             console.log("Admin Access Granted");
-            // إظهار أزرار التحكم (تعديل وحذف)
-            document.querySelectorAll('.admin-controls').forEach(el => {
-                el.style.display = 'flex';
-            });
-            // إظهار زر إضافة منشور جديد
-            const addBtn = document.querySelector('.admin-add-post');
+            // إظهار أزرار التحكم في المنشورات الموجودة حالياً
+            document.querySelectorAll('.admin-controls').forEach(el => el.style.display = 'flex');
+            // إظهار زر إضافة منشور جديد (باستخدام الـ ID الصحيح)
+            const addBtn = document.getElementById('admin-add-post');
             if (addBtn) addBtn.style.display = 'block';
         }
     }
 }
 
 /**
- * وظائف الإدارة
+ * فتح نافذة إضافة منشور (إضافة ذكية لـ Firebase)
  */
-function deletePost(btn) {
-    tg.showConfirm("هل أنت متأكد من حذف هذا المنشور؟", (ok) => {
+function openPostModal() {
+    const title = prompt("عنوان المنشور:");
+    const excerpt = prompt("وصف قصير:");
+    if (title && excerpt) {
+        const newPostRef = db.ref('posts').push();
+        newPostRef.set({
+            title: title,
+            excerpt: excerpt,
+            timestamp: Date.now(),
+            likes: 0,
+            loves: 0
+        }).then(() => {
+            tg.showAlert("تم النشر بنجاح! 🚀");
+        });
+    }
+}
+
+/**
+ * حذف المنشور من الواجهة ومن Firebase
+ */
+function deletePost(btn, postId) {
+    tg.showConfirm("هل أنت متأكد من حذف هذا المنشور نهائياً؟", (ok) => {
         if (ok) {
+            // حذف من Firebase
+            if (postId) db.ref('posts/' + postId).remove();
+
+            // تأثير بصري للحذف
             const card = btn.closest('.post-card');
             card.style.opacity = '0';
             card.style.transform = 'scale(0.8)';
@@ -44,149 +80,121 @@ function deletePost(btn) {
 }
 
 function editPost(btn) {
-    tg.showAlert("سيتم فتح محرر المنشورات في التحديث القادم!");
+    tg.showAlert("خاصية التعديل ستتوفر في التحديث القادم!");
 }
 
 /**
- * دالة الانتقال السلس لقسم الألعاب
+ * نظام التفاعلات (Reactions) المطور
  */
-function scrollToGames() {
-    const gameList = document.getElementById('games-section');
-    if (gameList) {
-        gameList.scrollIntoView({ behavior: 'smooth' });
-        tg.HapticFeedback.impactOccurred('medium');
-    }
-}
-
-/**
- * نظام تغيير اللغات العالمي
- */
-function changeLanguage(lang) {
-    if (typeof translations === 'undefined') {
-        console.error("Translations file (languages.js) is not loaded!");
-        return;
-    }
+function handleReaction(type, btn) {
+    if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
     
-    const data = translations[lang];
-    if (!data) return;
-
-    document.documentElement.dir = data.dir;
-    document.documentElement.lang = lang;
-
-    document.querySelectorAll('[data-i18n]').forEach(element => {
-        const key = element.getAttribute('data-i18n');
-        if (data[key]) {
-            element.innerText = data[key];
+    const countSpan = btn.querySelector('.reaction-count');
+    if (countSpan) {
+        let currentCount = parseInt(countSpan.innerText) || 0;
+        
+        if (btn.classList.contains('active')) {
+            countSpan.innerText = currentCount - 1;
+            btn.classList.remove('active');
+            btn.style.color = ""; 
+        } else {
+            countSpan.innerText = currentCount + 1;
+            btn.classList.add('active');
+            btn.style.color = "var(--accent)"; 
         }
-    });
-
-    localStorage.setItem('preferredLang', lang);
-    tg.HapticFeedback.impactOccurred('medium');
-}
-
-/**
- * وظائف القائمة الجانبية والدردشة
- */
-function toggleMenu() {
-    const sidebar = document.getElementById('sidebar');
-    if (sidebar) {
-        sidebar.classList.toggle('active');
-        tg.HapticFeedback.impactOccurred('medium');
-    }
-}
-
-function toggleChat() {
-    const chat = document.getElementById('chat-window');
-    if (chat) {
-        chat.classList.toggle('active');
-        tg.HapticFeedback.impactOccurred('light');
     }
 }
 
 /**
- * نظام جمع الأرباح مع تأثير العملات المتساقطة
+ * نظام جمع الأرباح (تأثير العملات)
  */
 function claimRewards(e) {
     const x = e.clientX || window.innerWidth / 2;
     const y = e.clientY || window.innerHeight / 2;
-
-    for (let i = 0; i < 15; i++) {
-        createCoin(x, y);
-    }
+    for (let i = 0; i < 15; i++) createCoin(x, y);
     
     tg.HapticFeedback.notificationOccurred('success');
-    
-    const lang = localStorage.getItem('preferredLang') || 'ar';
-    const alertMsg = lang === 'ar' ? "تمت إضافة الأرباح بنجاح! 💎" : "Success! Points added. 💎";
-    tg.showAlert(alertMsg);
+    tg.showAlert("تمت إضافة الأرباح بنجاح! 💎");
 }
 
 function createCoin(x, y) {
     const coin = document.createElement('div');
     coin.className = 'coin';
     coin.innerHTML = '💎';
-    
-    const randomX = x + (Math.random() - 0.5) * 100;
-    coin.style.left = randomX + 'px';
+    coin.style.left = (x + (Math.random() - 0.5) * 100) + 'px';
     coin.style.top = y + 'px';
-    
     document.body.appendChild(coin);
     setTimeout(() => coin.remove(), 1000);
 }
 
 /**
- * عرض فيديو ترويجي
+ * القوائم والدردشة والتنقل
  */
-function playPromo() {
-    const lang = localStorage.getItem('preferredLang') || 'ar';
-    const confirmTitle = lang === 'ar' ? "شاهد فيديو للحصول على نقاط؟" : "Watch video for points?";
-    
-    tg.showConfirm(confirmTitle, (ok) => {
-        if (ok) {
-            tg.showAlert(lang === 'ar' ? "جاري تحميل الإعلان..." : "Loading Ad...");
-        }
-    });
+function toggleMenu() {
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar) sidebar.classList.toggle('active');
+    tg.HapticFeedback.impactOccurred('medium');
+}
+
+function toggleChat() {
+    const chat = document.getElementById('chat-window');
+    if (chat) chat.classList.toggle('active');
+    tg.HapticFeedback.impactOccurred('light');
+}
+
+function scrollToGames() {
+    const section = document.getElementById('games-section');
+    if (section) {
+        section.scrollIntoView({ behavior: 'smooth' });
+        tg.HapticFeedback.impactOccurred('medium');
+    }
 }
 
 /**
- * تهيئة التطبيق عند تحميل الصفحة
+ * نظام اللغات
+ */
+function changeLanguage(lang) {
+    if (typeof translations === 'undefined') return;
+    const data = translations[lang];
+    if (!data) return;
+
+    document.documentElement.dir = data.dir || 'rtl';
+    document.documentElement.lang = lang;
+
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (data[key]) el.innerText = data[key];
+    });
+
+    localStorage.setItem('preferredLang', lang);
+}
+
+/**
+ * تهيئة التطبيق عند التشغيل
  */
 window.onload = () => {
     const savedLang = localStorage.getItem('preferredLang') || 'ar';
     const selector = document.getElementById('langSelector');
-    
     if (selector) selector.value = savedLang;
-    
-    if (typeof translations !== 'undefined') {
-        changeLanguage(savedLang);
-    }
+    changeLanguage(savedLang);
 
-    // فحص صلاحيات الإدارة
     checkAdminPrivileges();
 
-    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-        const userNameField = document.getElementById('username_side');
-        if (userNameField) {
-            userNameField.innerText = tg.initDataUnsafe.user.first_name;
-        }
+    // عرض اسم المستخدم من تليجرام
+    if (tg.initDataUnsafe?.user) {
+        const userField = document.getElementById('username_side');
+        if (userField) userField.innerText = tg.initDataUnsafe.user.first_name;
     }
 };
 
 /**
- * تحديث شريط النشاط المباشر
+ * شريط النشاط المباشر
  */
 setInterval(() => {
-    const lang = localStorage.getItem('preferredLang') || 'ar';
-    const data = translations[lang] || {};
-    
-    const usersCount = Math.floor(Math.random() * 1000 + 4000);
-    const miningAmount = (Math.random() * 20).toFixed(1);
-    
-    const activeText = data.live_active || "مستخدم نشط الآن";
-    const miningText = data.live_mining || "جاري تعدين XPC الآن...";
-    
     const activityBar = document.getElementById('live-activity');
     if (activityBar) {
-        activityBar.innerText = `👤 ${usersCount.toLocaleString()} ${activeText} | ⛏️ ${miningAmount} ${miningText}`;
+        const users = Math.floor(Math.random() * 500 + 4000).toLocaleString();
+        const mining = (Math.random() * 15).toFixed(1);
+        activityBar.innerText = `👤 ${users} مستخدم نشط | ⛏️ تعدين ${mining} XPC...`;
     }
 }, 5000);

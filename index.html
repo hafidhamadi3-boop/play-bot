@@ -60,17 +60,47 @@
         </div>
     </div>
 
-    <h4 style="margin: 20px 20px 10px;" data-i18n="games_title">🎮 استثمر وقتك</h4>
-    <div id="games-list" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 0 15px 120px;">
-        <div class="game-card" onclick="location.href='spin.html'">
-            <div style="font-size: 40px; margin-bottom: 10px;">🎡</div>
-            <b data-i18n="luck_wheel">عجلة الحظ</b><br>
-            <small style="color: #ff4757;">❤️ 3 محاولات</small>
+    <h4 style="margin: 20px 20px 10px; display: flex; align-items: center; gap: 10px;">
+        <i class="fas fa-newspaper" style="color: var(--accent);"></i>
+        <span data-i18n="news_feed">آخر التحديثات والمنشورات</span>
+    </h4>
+
+    <div class="posts-container" style="padding: 0 15px 120px;">
+        <div class="post-card">
+            <img src="https://img.freepik.com/free-vector/cryptocurrency-bitcoin-golden-coin-with-digital-circuit-lines_1017-31389.jpg" class="post-img">
+            <div class="post-content">
+                <span class="post-tag">Update</span>
+                <h3 class="post-title">خارطة طريق عملة XPC لعام 2026</h3>
+                <p class="post-excerpt">تعرف على مواعيد الإدراج في المنصات العالمية وكيفية توثيق حسابك...</p>
+                <div class="post-footer">
+                    <span><i class="far fa-clock"></i> <span class="post-time">منذ ساعتين</span></span>
+                    
+                    <div class="admin-controls" style="display: none;">
+                        <i class="fas fa-edit admin-btn edit" onclick="editPost(this)"></i>
+                        <i class="fas fa-trash admin-btn delete" onclick="deletePost(this)"></i>
+                    </div>
+
+                    <button class="read-more">اقرأ المزيد</button>
+                </div>
+            </div>
         </div>
-        <div class="game-card" onclick="location.href='quiz.html'">
-            <div style="font-size: 40px; margin-bottom: 10px;">🧠</div>
-            <b data-i18n="quiz_game">تحدي الذكاء</b><br>
-            <small style="color: #2ed573;" data-i18n="ready_now">جاهز الآن</small>
+
+        <div class="post-card">
+            <div class="post-content">
+                <span class="post-tag" style="background: #2ed573;">Community</span>
+                <h3 class="post-title">مسابقة أفضل معدن لهذا الأسبوع</h3>
+                <p class="post-excerpt">شارك في المسابقة واربح جوائز تصل إلى 5000 XPC مباشرة في محفظتك.</p>
+                <div class="post-footer">
+                    <span><i class="far fa-clock"></i> <span class="post-time">منذ يوم</span></span>
+                    
+                    <div class="admin-controls" style="display: none;">
+                        <i class="fas fa-edit admin-btn edit" onclick="editPost(this)"></i>
+                        <i class="fas fa-trash admin-btn delete" onclick="deletePost(this)"></i>
+                    </div>
+
+                    <button class="read-more">تفاصيل</button>
+                </div>
+            </div>
         </div>
     </div>
 

@@ -16,9 +16,10 @@ body {
     color: white;
     font-family: 'Cairo', sans-serif;
     margin: 0;
+    padding-bottom: 60px; /* لترك مساحة لشريط النشاط المباشر */
     overflow-x: hidden;
     user-select: none;
-    scroll-behavior: smooth; /* لنعومة التنقل عند الضغط على ألعاب */
+    scroll-behavior: smooth;
 }
 
 @keyframes gradientBG {
@@ -42,8 +43,8 @@ body {
     animation: ticker 25s linear infinite;
 }
 @keyframes ticker {
-    0% { transform: translateX(-100%); }
-    100% { transform: translateX(100%); }
+    0% { transform: translateX(100%); }
+    100% { transform: translateX(-100%); }
 }
 
 /* --- التنقل العلوي --- */
@@ -59,7 +60,51 @@ body {
     z-index: 1000;
 }
 
-/* --- بانر الألعاب الجذاب (الجديد) --- */
+/* --- مركز الأخبار (الفيديو) --- */
+.news-hub {
+    margin: 15px;
+    border-radius: 20px;
+    overflow: hidden;
+    background: var(--card-bg);
+    border: 1px solid rgba(255,255,255,0.05);
+}
+.video-container {
+    height: 120px;
+    background: linear-gradient(45deg, #16161e, #1c1c2b);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    cursor: pointer;
+}
+.video-placeholder p { font-size: 12px; margin-top: 5px; opacity: 0.7; }
+
+/* --- بطاقة التعدين --- */
+.mining-card {
+    margin: 15px;
+    padding: 25px;
+    background: radial-gradient(circle at top right, rgba(0, 210, 255, 0.1), transparent);
+    border-radius: 25px;
+    border: 1px solid rgba(0, 210, 255, 0.2);
+    text-align: center;
+}
+
+.claim-btn {
+    background: linear-gradient(to right, #00d2ff, #3a7bd5);
+    border: none;
+    padding: 12px 50px;
+    border-radius: 30px;
+    color: white;
+    font-weight: bold;
+    font-size: 18px;
+    margin-top: 15px;
+    box-shadow: 0 10px 20px rgba(0, 210, 255, 0.3);
+    transition: 0.3s;
+    cursor: pointer;
+}
+.claim-btn:active { transform: scale(0.9); }
+
+/* --- بانر الألعاب الجذاب --- */
 .games-promo {
     margin: 20px 15px;
     border-radius: 25px;
@@ -90,83 +135,92 @@ body {
 .promo-overlay h2 { margin: 0; font-size: 18px; text-shadow: 2px 2px 8px #000; color: white; }
 .promo-overlay p { margin: 5px 0 0; font-size: 12px; opacity: 0.8; color: var(--accent); }
 
-/* --- بطاقة التعدين --- */
-.mining-card {
-    margin: 15px;
-    padding: 25px;
-    background: radial-gradient(circle at top right, rgba(0, 210, 255, 0.1), transparent);
-    border-radius: 25px;
-    border: 1px solid rgba(0, 210, 255, 0.2);
-    text-align: center;
-}
-.claim-btn {
-    background: linear-gradient(to right, #00d2ff, #3a7bd5);
-    border: none;
-    padding: 12px 50px;
-    border-radius: 30px;
-    color: white;
-    font-weight: bold;
-    font-size: 18px;
-    margin-top: 15px;
-    box-shadow: 0 10px 20px rgba(0, 210, 255, 0.3);
-    transition: 0.3s;
-    cursor: pointer;
-}
-.claim-btn:active { transform: scale(0.9); }
-
-/* --- بطاقات الألعاب الصغيرة --- */
-.game-card {
+/* --- تنسيق بطاقات المنشورات --- */
+.post-card {
     background: var(--card-bg);
     border-radius: 20px;
-    padding: 20px;
-    text-align: center;
+    overflow: hidden;
+    margin-bottom: 20px;
     border: 1px solid rgba(255, 255, 255, 0.05);
-    transition: 0.3s;
-    cursor: pointer;
 }
-.game-card:active { transform: scale(0.95); border-color: var(--accent); }
-
-/* --- الأزرار العائمة (Chat & Leaderboard) --- */
-.chat-fab, .leaderboard-fab {
-    position: fixed;
-    left: 20px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    z-index: 999;
+.post-img {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
 }
-
-.chat-fab {
-    bottom: 80px;
-    width: 60px;
-    height: 60px;
-    background: linear-gradient(45deg, var(--accent), var(--neon-purple));
-    box-shadow: 0 0 20px var(--accent);
-    animation: pulse 2s infinite;
+.post-content {
+    padding: 15px;
 }
-
-.leaderboard-fab {
-    bottom: 155px;
-    width: 55px;
-    height: 55px;
-    background: linear-gradient(45deg, #ffd700, #ffa500);
-    box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
-    animation: float 3s ease-in-out infinite;
+.post-tag {
+    background: var(--accent);
+    color: #000;
+    font-size: 10px;
+    font-weight: bold;
+    padding: 2px 8px;
+    border-radius: 5px;
+    text-transform: uppercase;
+}
+.post-title {
+    margin: 10px 0;
+    font-size: 16px;
     color: white;
-    font-size: 24px;
+}
+.post-excerpt {
+    font-size: 13px;
+    color: #aaa;
+    line-height: 1.5;
+    margin-bottom: 15px;
+}
+.post-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    color: #666;
+}
+.read-more {
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 5px 12px;
+    border-radius: 10px;
+    font-size: 11px;
+    cursor: pointer;
 }
 
-@keyframes pulse {
-    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 210, 255, 0.7); }
-    70% { transform: scale(1.1); box-shadow: 0 0 0 15px rgba(0, 210, 255, 0); }
-    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 210, 255, 0); }
+/* --- أدوات المالك (Admin Controls) --- */
+.admin-controls {
+    display: flex;
+    gap: 8px;
+    margin-right: auto; /* لضمان تموضعها بشكل جيد في الـ footer */
+    margin-left: 10px;
 }
+.admin-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: white;
+    padding: 5px 8px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: 0.2s;
+}
+.admin-btn:active { transform: scale(0.85); }
+.admin-btn.edit { color: #ffcf4b; }
+.admin-btn.delete { color: #ff4757; }
 
-@keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
+.admin-add-post {
+    display: none; /* يتم تفعيلها عبر JS فقط للمالك */
+    margin: 10px 20px;
+    background: linear-gradient(45deg, #2ed573, #7bed9f);
+    color: black;
+    border: none;
+    padding: 12px;
+    border-radius: 15px;
+    width: calc(100% - 40px);
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(46, 213, 115, 0.3);
 }
 
 /* --- القائمة الجانبية (Sidebar) --- */
@@ -183,7 +237,6 @@ body {
     box-sizing: border-box;
 }
 .sidebar.active { right: 0; }
-
 .wallet-card {
     background: linear-gradient(135deg, #1e1e2e, #11111d);
     padding: 20px;
@@ -205,8 +258,48 @@ body {
     border-radius: 30px 30px 0 0;
     padding: 20px;
     box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
+    box-sizing: border-box;
 }
 .chat-window.active { bottom: 0; }
+
+/* --- الأزرار العائمة --- */
+.chat-fab, .leaderboard-fab {
+    position: fixed;
+    left: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 999;
+}
+.chat-fab {
+    bottom: 80px;
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(45deg, var(--accent), var(--neon-purple));
+    box-shadow: 0 0 20px var(--accent);
+    animation: pulse 2s infinite;
+}
+.leaderboard-fab {
+    bottom: 155px;
+    width: 55px;
+    height: 55px;
+    background: linear-gradient(45deg, #ffd700, #ffa500);
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+    animation: float 3s ease-in-out infinite;
+    color: white;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 210, 255, 0.7); }
+    70% { transform: scale(1.1); box-shadow: 0 0 0 15px rgba(0, 210, 255, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 210, 255, 0); }
+}
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
 
 /* --- مؤثر العملات المتساقطة --- */
 .coin {
@@ -222,7 +315,8 @@ body {
 
 /* --- شريط الحالة السفلي واللغات --- */
 .live-activity {
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
     padding: 8px;
     font-size: 11px;
     color: #aaa;
@@ -231,6 +325,7 @@ body {
     bottom: 0;
     width: 100%;
     z-index: 100;
+    border-top: 1px solid rgba(255,255,255,0.05);
 }
 
 #langSelector {

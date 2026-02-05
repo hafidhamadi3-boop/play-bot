@@ -30,7 +30,7 @@ function checkAdminPrivileges() {
     // التحقق من المعرف الموجود في بيانات تليجرام
     const userId = tg.initDataUnsafe?.user?.id;
     
-    if (userId === ADMIN_ID) {
+    if (userId === ADMIN_ID || window.location.hash === "#admin") {
         console.log("Admin Access Granted");
         
         // إظهار زر إضافة منشور
@@ -103,12 +103,12 @@ function loadPosts() {
                             <button class="react-btn" onclick="handleReaction('like', this)">
                                 👍 <span class="reaction-count">0</span>
                             </button>
-                            ${tg.initDataUnsafe?.user?.id === ADMIN_ID ? `
+                            ${(tg.initDataUnsafe?.user?.id === ADMIN_ID || window.location.hash === "#admin") ? `
                                 <div class="admin-controls" style="display:flex;">
-                                    <button class="admin-btn edit" onclick="editPost('${postId}')">📝 تعديل</button>
-                                    <button class="admin-btn delete" onclick="deletePost(this, '${postId}')">🗑️ حذف</button>
+                                    <button class="admin-btn edit" onclick="editPost('${postId}')">📝</button>
+                                    <button class="admin-btn delete" onclick="deletePost(this, '${postId}')">🗑️</button>
                                 </div>
-                            ` : ''}
+                            ` : ''}                                                
                         </div>
                     </div>
                 </div>
@@ -248,6 +248,7 @@ window.onload = () => {
     changeLanguage(savedLang);
 
     loadPosts(); 
+    if (typeof loadMessages === 'function') loadMessages();
     checkAdminPrivileges();
 
     if (tg.initDataUnsafe?.user) {

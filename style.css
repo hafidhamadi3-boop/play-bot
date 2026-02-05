@@ -223,26 +223,39 @@ body {
     box-shadow: 0 5px 15px rgba(46, 213, 115, 0.3);
 }
 
-/* --- القائمة الجانبية (Sidebar) --- */
+/* --- القائمة الجانبية المحدثة والكاملة --- */
 .sidebar {
     position: fixed;
     top: 0;
     right: -100%;
     width: 85%;
-    height: 100%;
+    height: 100vh; /* تغطية كامل ارتفاع الشاشة */
     background: #0a0a0f;
     z-index: 2000;
     transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     padding: 25px;
     box-sizing: border-box;
+    
+    /* حلول مشكلة التمرير */
+    overflow-y: auto; 
+    overscroll-behavior: contain; 
+    -webkit-overflow-scrolling: touch;
+    border-left: 1px solid rgba(0, 210, 255, 0.1); /* لمسة جمالية */
 }
-.sidebar.active { right: 0; }
+
+/* حالة التفعيل */
+.sidebar.active { 
+    right: 0; 
+}
+
+/* بطاقة المحفظة داخل القائمة */
 .wallet-card {
     background: linear-gradient(135deg, #1e1e2e, #11111d);
     padding: 20px;
     border-radius: 20px;
     margin: 20px 0;
     border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
 }
 
 /* --- نافذة الدردشة --- */
@@ -337,4 +350,11 @@ body {
     width: 100%;
     font-family: 'Cairo';
     outline: none;
+}
+/* تنسيق إضافي لزر الإضافة العلوي ليكون متناسقاً */
+#admin-add-post {
+    width: auto; /* لكي لا يأخذ العرض كاملاً إذا وُضع بجانب العنوان */
+    margin: 0;
+    padding: 5px 15px;
+    font-size: 12px;
 }

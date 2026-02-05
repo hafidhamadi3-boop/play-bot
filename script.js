@@ -3,7 +3,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyC1Tb7gOIaRhp5Nw1GShKA-TptvOTUhiOU",
   authDomain: "xpayproject-28e43.firebaseapp.com",
   projectId: "xpayproject-28e43",
-  storageBucket: "xpayproject-28e43.firebasestorage.app",
+  storageBucket: "xpayproject-28e43.firebasestorage.app", // تم التأكد من اسم السلة للرفع
   messagingSenderId: "616308617423",
   appId: "1:616308617423:web:615d5ebe44bb66157c87ba",
   measurementId: "G-7ZHZDHX2NW",
@@ -13,6 +13,7 @@ const firebaseConfig = {
 // 2. تهيئة Firebase
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
+const storage = firebase.storage(); // تهيئة خدمة رفع الملفات
 
 // تهيئة Telegram WebApp
 const tg = window.Telegram.WebApp;
@@ -29,9 +30,7 @@ function checkAdminPrivileges() {
         const userId = tg.initDataUnsafe.user.id;
         if (userId === ADMIN_ID) {
             console.log("Admin Access Granted");
-            // إظهار أزرار التحكم في المنشورات الموجودة حالياً
             document.querySelectorAll('.admin-controls').forEach(el => el.style.display = 'flex');
-            // إظهار زر إضافة منشور جديد (باستخدام الـ ID الصحيح)
             const addBtn = document.getElementById('admin-add-post');
             if (addBtn) addBtn.style.display = 'block';
         }
@@ -39,66 +38,128 @@ function checkAdminPrivileges() {
 }
 
 /**
- * فتح نافذة إضافة منشور (إضافة ذكية لـ Firebase)
+ * فتح نافذة إضافة منشور مع دعم رفع الملفات (صور/فيديو)
  */
-function openPostModal() {
+async function openPostModal() {
     const title = prompt("عنوان الخبر:");
     const excerpt = prompt("وصف مختصر:");
-    const imageURL = prompt("رابط الصورة (URL):", "https://via.placeholder.com/300");
-    const category = prompt("التصنيف (مثلاً: NEWS, UPDATE):", "NEWS");
+    
+    if (!title || !excerpt) return;
 
-    if (title && excerpt) {
-        // إرسال البيانات إلى Firebase
-        const newPostRef = db.ref('posts').push();
-        newPostRef.set({
-            title: title,
-            excerpt: excerpt,
-            image: imageURL,
-            tag: category,
-            timestamp: Date.now()
-        }).then(() => {
-            tg.showAlert("تم النشر بنجاح! سيظهر الخبر فوراً.");
-        }).catch((error) => {
-            tg.showAlert("خطأ في النشر: " + error.message);
-        });
-    }
+    // إنشاء عنصر اختيار ملف برمجياً
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*,video/*'; 
+    
+    fileInput.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        tg.showScanQrPopup({ text: "جاري رفع الملف... انتظر قليلاً ⏳" }); // تنبيه بصري
+
+        try {
+            // 1. رفع الملف إلى Firebase Storage
+            const fileName = `${Date.now()}_${file.name}`;
+            const storageRef = storage.ref(`posts/${fileName}`);
+            const uploadTask = await storageRef.put(file);
+            
+            // 2. الحصول على رابط التحميل المباشر
+            const downloadURL = await storageRef.getDownloadURL();
+
+            // 3. حفظ البيانات في Realtime Database
+            const postsRef = db.ref('posts');
+            const newPostRef = postsRef.push();
+            
+            await newPostRef.set({
+                title: title,
+                excerpt: excerpt,
+                image: downloadURL,
+                fileType: file.type, 
+                timestamp: Date.now(),
+                admin_id: ADMIN_ID,
+                tag: "UPDATE"
+            });
+
+            tg.closeScanQrPopup();
+            tg.showAlert("تم رفع الملف ونشر الخبر بنجاح! ✅");
+        } catch (error) {
+            console.error(error);
+            tg.showAlert("فشل الرفع: " + error.message);
+        }
+    };
+
+    fileInput.click(); // فتح استوديو الجهاز
 }
 
 /**
- * حذف المنشور من الواجهة ومن Firebase
+ * دالة جلب المنشورات من Firebase وعرضها ديناميكياً
+ */
+function loadPosts() {
+    const postsContainer = document.getElementById('news-feed');
+    if (!postsContainer) return;
+
+    // استخدام المستمع المستمر .on لضمان التحديث التلقائي فور النشر
+    db.ref('posts').orderByChild('timestamp').on('value', (snapshot) => {
+        postsContainer.innerHTML = ''; 
+        
+        snapshot.forEach((childSnapshot) => {
+            const post = childSnapshot.val();
+            const postId = childSnapshot.key;
+
+            // تحديد ما إذا كان الملف فيديو أم صورة لعرضه بشكل صحيح
+            const mediaHTML = post.fileType && post.fileType.includes('video') 
+                ? `<video src="${post.image}" controls class="post-img" style="max-height:300px; background:#000;"></video>` 
+                : `<img src="${post.image || 'https://via.placeholder.com/300'}" class="post-img">`;
+
+            const postHTML = `
+                <div class="post-card" id="post-${postId}">
+                    ${mediaHTML}
+                    <div class="post-content">
+                        <span class="post-tag">${post.tag || 'NEWS'}</span>
+                        <h3 class="post-title">${post.title}</h3>
+                        <p class="post-excerpt">${post.excerpt}</p>
+                        <div class="post-footer">
+                            <button class="react-btn" onclick="handleReaction('like', this)">
+                                👍 <span class="reaction-count">0</span>
+                            </button>
+                            ${tg.initDataUnsafe?.user?.id === ADMIN_ID ? `
+                                <div class="admin-controls" style="display:flex;">
+                                    <button class="admin-btn delete" onclick="deletePost(this, '${postId}')">🗑️ حذف</button>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+            postsContainer.insertAdjacentHTML('afterbegin', postHTML);
+        });
+    });
+}
+
+/**
+ * حذف المنشور من الواجهة ومن Firebase مع حذف الملف من التخزين اختياريًا
  */
 function deletePost(btn, postId) {
     tg.showConfirm("هل أنت متأكد من حذف هذا المنشور نهائياً؟", (ok) => {
         if (ok) {
-            // حذف من Firebase
-            if (postId) db.ref('posts/' + postId).remove();
-
-            // تأثير بصري للحذف
+            db.ref('posts/' + postId).remove().then(() => {
+                tg.HapticFeedback.notificationOccurred('success');
+            });
             const card = btn.closest('.post-card');
             card.style.opacity = '0';
-            card.style.transform = 'scale(0.8)';
-            setTimeout(() => {
-                card.remove();
-                tg.HapticFeedback.notificationOccurred('success');
-            }, 300);
+            setTimeout(() => card.remove(), 300);
         }
     });
 }
 
-function editPost(btn) {
-    tg.showAlert("خاصية التعديل ستتوفر في التحديث القادم!");
-}
-
 /**
- * نظام التفاعلات (Reactions) المطور
+ * نظام التفاعلات (Reactions)
  */
 function handleReaction(type, btn) {
-    if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
-    
+    tg.HapticFeedback.impactOccurred('light');
     const countSpan = btn.querySelector('.reaction-count');
     if (countSpan) {
         let currentCount = parseInt(countSpan.innerText) || 0;
-        
         if (btn.classList.contains('active')) {
             countSpan.innerText = currentCount - 1;
             btn.classList.remove('active');
@@ -112,13 +173,12 @@ function handleReaction(type, btn) {
 }
 
 /**
- * نظام جمع الأرباح (تأثير العملات)
+ * تأثير العملات وتجميع الأرباح
  */
 function claimRewards(e) {
     const x = e.clientX || window.innerWidth / 2;
     const y = e.clientY || window.innerHeight / 2;
     for (let i = 0; i < 15; i++) createCoin(x, y);
-    
     tg.HapticFeedback.notificationOccurred('success');
     tg.showAlert("تمت إضافة الأرباح بنجاح! 💎");
 }
@@ -134,26 +194,16 @@ function createCoin(x, y) {
 }
 
 /**
- * القوائم والدردشة والتنقل
+ * التحكم بالقائمة الجانبية ومنع تمرير الخلفية
  */
 function toggleMenu() {
     const sidebar = document.getElementById('sidebar');
     if (sidebar) {
         sidebar.classList.toggle('active');
-        
-        // منع التمرير في الصفحة الرئيسية عند فتح القائمة الجانبية
-        if (sidebar.classList.contains('active')) {
-            document.body.style.overflow = 'hidden'; // قفل التمرير
-            document.body.style.touchAction = 'none'; // منع السحب في الخلفية
-        } else {
-            document.body.style.overflow = ''; // إعادة التمرير الطبيعي
-            document.body.style.touchAction = ''; 
-        }
-        
-        // اهتزاز الموبايل عند الفتح/الإغلاق
-        if (window.Telegram && window.Telegram.WebApp) {
-            window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
-        }
+        const isActive = sidebar.classList.contains('active');
+        document.body.style.overflow = isActive ? 'hidden' : '';
+        document.body.style.touchAction = isActive ? 'none' : '';
+        tg.HapticFeedback.impactOccurred('medium');
     }
 }
 
@@ -161,47 +211,29 @@ function toggleChat() {
     const chat = document.getElementById('chat-window');
     if (chat) {
         chat.classList.toggle('active');
-        
-        // اختيارياً: يمكنك قفل التمرير هنا أيضاً إذا كانت الدردشة لا تغطي الشاشة كاملة
-        if (chat.classList.contains('active')) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = '';
-        }
-        
-        window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
-    }
-}
-
-function scrollToGames() {
-    const section = document.getElementById('games-section');
-    if (section) {
-        section.scrollIntoView({ behavior: 'smooth' });
-        tg.HapticFeedback.impactOccurred('medium');
+        document.body.style.overflow = chat.classList.contains('active') ? 'hidden' : '';
+        tg.HapticFeedback.impactOccurred('light');
     }
 }
 
 /**
- * نظام اللغات
+ * نظام اللغات والترجمة
  */
 function changeLanguage(lang) {
     if (typeof translations === 'undefined') return;
     const data = translations[lang];
     if (!data) return;
-
     document.documentElement.dir = data.dir || 'rtl';
     document.documentElement.lang = lang;
-
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
         if (data[key]) el.innerText = data[key];
     });
-
     localStorage.setItem('preferredLang', lang);
 }
 
 /**
- * تهيئة التطبيق عند التشغيل
+ * تهيئة التطبيق
  */
 window.onload = () => {
     const savedLang = localStorage.getItem('preferredLang') || 'ar';
@@ -210,8 +242,8 @@ window.onload = () => {
     changeLanguage(savedLang);
 
     checkAdminPrivileges();
+    loadPosts(); // بدء جلب البيانات من Firebase
 
-    // عرض اسم المستخدم من تليجرام
     if (tg.initDataUnsafe?.user) {
         const userField = document.getElementById('username_side');
         if (userField) userField.innerText = tg.initDataUnsafe.user.first_name;
@@ -229,43 +261,3 @@ setInterval(() => {
         activityBar.innerText = `👤 ${users} مستخدم نشط | ⛏️ تعدين ${mining} XPC...`;
     }
 }, 5000);
-
-// دالة جلب المنشورات من Firebase وعرضها
-function loadPosts() {
-    const postsContainer = document.getElementById('news-feed'); // تأكد أن هذا الـ ID موجود في HTML
-    if (!postsContainer) return;
-
-    db.ref('posts').orderByChild('timestamp').on('value', (snapshot) => {
-        postsContainer.innerHTML = ''; // تنظيف الحاوية قبل العرض
-        
-        snapshot.forEach((childSnapshot) => {
-            const post = childSnapshot.val();
-            const postId = childSnapshot.key;
-
-            const postHTML = `
-                <div class="post-card" id="post-${postId}">
-                    <img src="${post.image || 'https://via.placeholder.com/300'}" class="post-img">
-                    <div class="post-content">
-                        <span class="post-tag">${post.tag || 'NEWS'}</span>
-                        <h3 class="post-title">${post.title}</h3>
-                        <p class="post-excerpt">${post.excerpt}</p>
-                        <div class="post-footer">
-                            <button class="react-btn" onclick="handleReaction('like', this)">
-                                👍 <span class="reaction-count">0</span>
-                            </button>
-                            ${tg.initDataUnsafe?.user?.id === ADMIN_ID ? `
-                                <div class="admin-controls" style="display:flex;">
-                                    <button class="admin-btn delete" onclick="deletePost(this, '${postId}')">🗑️</button>
-                                </div>
-                            ` : ''}
-                        </div>
-                    </div>
-                </div>
-            `;
-            postsContainer.insertAdjacentHTML('afterbegin', postHTML);
-        });
-    });
-}
-
-// استدعاء الدالة عند تحميل الصفحة
-window.addEventListener('load', loadPosts);

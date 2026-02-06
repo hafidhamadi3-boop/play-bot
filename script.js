@@ -79,10 +79,8 @@ function loadPosts() {
     const postsContainer = document.getElementById('news-feed');
     if (!postsContainer) return;
 
-    // orderByChild('timestamp') لضمان ترتيب الأخبار من الأحدث
-    firebase.database().ref('posts').orderByChild('timestamp').on('value', (snapshot) => {
+    db.ref('posts').orderByChild('timestamp').on('value', (snapshot) => {
         postsContainer.innerHTML = ''; 
-        
         snapshot.forEach((childSnapshot) => {
             const post = childSnapshot.val();
             const postId = childSnapshot.key;
@@ -105,14 +103,10 @@ function loadPosts() {
                             </div>                                               
                         </div>
                     </div>
-                </div>
-            `;
+                </div>`;
             postsContainer.insertAdjacentHTML('afterbegin', postHTML);
         });
-    });
-}
-
-        // إعادة التحقق بعد تحميل المنشورات للتأكد من ظهور الأزرار
+        // استدعاء التحقق هنا داخل المستمع لضمان ظهور الزر بعد التحميل
         checkAdminPrivileges();
     });
 }

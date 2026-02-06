@@ -1,5 +1,5 @@
 /**
- * X-PAY Messenger Engine 🚀 - Pro Max Version
+ * X-PAY Messenger Engine 🚀 - Pro Max Version (Updated)
  */
 
 const _db = window.db || (typeof firebase !== 'undefined' ? firebase.database() : null);
@@ -62,7 +62,7 @@ function loadMessages() {
     });
 }
 
-// --- 3. التعامل مع اللمس (الضغط المطول والسحب للرد) ---
+// --- 3. التعامل مع اللمس المطور (السحب للرد والضغط المطول) ---
 let touchStartX = 0;
 let touchTimer = null;
 
@@ -77,75 +77,112 @@ function handleTouchStart(e, msgId, username) {
 
 function handleTouchMove(e, element) {
     let moveX = e.touches[0].clientX - touchStartX;
-    if (moveX > 50) { // سحب لليمين
-        element.style.transform = `translateX(${Math.min(moveX, 100)}px)`;
-        clearTimeout(touchTimer); // إلغاء الضغط المطول إذا كان يسحب
+    if (moveX > 20) { // بدأت عملية السحب لليمين
+        clearTimeout(touchTimer); // إلغاء الضغط المطول فور التحريك
+        element.style.transform = `translateX(${Math.min(moveX, 80)}px)`;
+        element.style.transition = "none"; 
     }
 }
 
 function handleTouchEnd(element, msgId, username, text) {
-    let finalMoveX = parseInt(element.style.transform.replace('translateX(', '') || 0);
+    let finalMoveX = 0;
+    const transformValue = element.style.transform;
+    if (transformValue && transformValue.includes('translateX')) {
+        finalMoveX = parseInt(transformValue.replace(/[^\d.]/g, ''));
+    }
+
+    // إعادة الرسالة لمكانها بنعومة
+    element.style.transition = "transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)";
     element.style.transform = 'translateX(0)';
     clearTimeout(touchTimer);
 
+    // إذا سحب المستخدم أكثر من 60 بكسل، نفذ الرد
     if (finalMoveX > 60) {
         prepareReply(msgId, username, text);
     }
 }
 
-// --- 4. نظام التفاعلات والردود ---
+// --- 4. نظام التفاعلات والردود الموثوق ---
 function showEmojiPicker(msgId) {
     const emojis = ['❤️', '🔥', '👍', '😂', '😮', '😢'];
     const picker = document.createElement('div');
     picker.className = 'emoji-picker-popup';
+    
     emojis.forEach(emoji => {
         const span = document.createElement('span');
         span.innerText = emoji;
         span.onclick = () => {
-            addReaction(msgId, emoji);
+            toggleReaction(msgId, emoji); // استخدام الدالة الجديدة للتبديل
             picker.remove();
         };
         picker.appendChild(span);
     });
     document.body.appendChild(picker);
     
-    // إغلاق عند الضغط في أي مكان آخر
     setTimeout(() => {
         document.onclick = () => { picker.remove(); document.onclick = null; };
     }, 100);
 }
 
-function addReaction(msgId, emoji) {
+// دالة ذكية: إذا كان التفاعل موجوداً تحذفه، وإذا لم يكن تضعه
+function toggleReaction(msgId, emoji) {
     const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 0;
-    _db.ref(`messages/${msgId}/reactions/${userId}`).set(emoji);
-    window.Telegram?.WebApp?.HapticFeedback.impactOccurred('light');
+    const reactionRef = _db.ref(`messages/${msgId}/reactions/${userId}`);
+
+    reactionRef.once('value').then((snapshot) => {
+        const currentEmoji = snapshot.val();
+        if (currentEmoji === emoji) {
+            // إذا كان نفس الإيموجي، قم بإزالته (إلغاء التفاعل)
+            reactionRef.remove();
+            window.Telegram?.WebApp?.HapticFeedback.notificationOccurred('warning');
+        } else {
+            // إذا كان مختلفاً أو غير موجود، ضعه
+            reactionRef.set(emoji);
+            window.Telegram?.WebApp?.HapticFeedback.impactOccurred('light');
+        }
+    });
 }
 
 function renderReactions(reactions) {
-    return Object.values(reactions).slice(0, 3).join('');
+    // عرض أول 3 تفاعلات فريدة
+    const uniqueReactions = [...new Set(Object.values(reactions))];
+    return uniqueReactions.slice(0, 3).join('');
 }
 
 function prepareReply(msgId, username, text) {
     window.currentReplyId = msgId;
-    const input = document.getElementById('chat-input');
-    const replyBar = document.getElementById('reply-preview-bar') || createReplyBar();
-    replyBar.innerHTML = `<span>الرد على ${username}: ${text.substring(0,20)}...</span> <i class="fas fa-times" onclick="cancelReply()"></i>`;
-    replyBar.style.display = 'flex';
-    input.focus();
-    window.Telegram?.WebApp?.HapticFeedback.impactOccurred('medium');
-}
+    const chatWindow = document.querySelector('.chat-window');
+    const chatInputContainer = document.querySelector('.chat-window div:last-child');
+    
+    let replyBar = document.getElementById('reply-preview-bar');
+    if (!replyBar) {
+        replyBar = document.createElement('div');
+        replyBar.id = 'reply-preview-bar';
+        chatWindow.insertBefore(replyBar, chatInputContainer);
+    }
 
-function createReplyBar() {
-    const bar = document.createElement('div');
-    bar.id = 'reply-preview-bar';
-    document.querySelector('.chat-window').insertBefore(bar, document.querySelector('.chat-window div:last-child'));
-    return bar;
+    replyBar.innerHTML = `
+        <div style="display:flex; align-items:center; gap:10px; overflow:hidden;">
+            <i class="fas fa-reply" style="color:var(--accent);"></i>
+            <div style="white-space:nowrap;">
+                <b style="display:block; font-size:10px;">الرد على ${username}</b>
+                <span style="font-size:12px; opacity:0.8;">${text.substring(0, 30)}...</span>
+            </div>
+        </div>
+        <i class="fas fa-times-circle" onclick="cancelReply()" style="cursor:pointer; font-size:18px;"></i>
+    `;
+    
+    replyBar.style.display = 'flex';
+    document.getElementById('chat-input').focus();
+    window.Telegram?.WebApp?.HapticFeedback.impactOccurred('medium');
 }
 
 function cancelReply() {
     window.currentReplyId = null;
-    const bar = document.getElementById('reply-preview-bar');
-    if(bar) bar.style.display = 'none';
+    const replyBar = document.getElementById('reply-preview-bar');
+    if (replyBar) {
+        replyBar.style.display = 'none';
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => setTimeout(loadMessages, 500));

@@ -26,36 +26,40 @@ const ADMIN_ID = 1954301817;
  * دالة التحقق من المالك وإظهار أدوات التحكم
  * تم تحسينها لتظهر الزر بناءً على المعرف الصريح
  */
+/**
+ * نظام الإدارة المطور - XPay
+ */
+
 function checkAdminPrivileges() {
-    // التحقق من المعرف الموجود في بيانات تليجرام
     const userId = tg.initDataUnsafe?.user?.id;
+    // استخدام includes لضمان عمل الهاش حتى لو تغير الرابط قليلاً
+    const isAdmin = (userId === ADMIN_ID || window.location.hash.includes("admin"));
     
-    if (userId === ADMIN_ID || window.location.hash === "#admin") {
-        console.log("Admin Access Granted");
+    if (isAdmin) {
+        console.log("Admin Verified ✅");
         
-        // إظهار زر إضافة منشور
         const addBtn = document.getElementById('admin-add-post');
         if (addBtn) {
-            addBtn.style.display = 'block';
+            addBtn.style.setProperty('display', 'block', 'important');
         }
 
-        // إظهار أزرار التحكم في المنشورات (تعديل/حذف)
+        // إظهار عناصر التحكم في المنشورات الموجودة فعلياً
         document.querySelectorAll('.admin-controls').forEach(el => {
-            el.style.display = 'flex';
+            el.style.setProperty('display', 'flex', 'important');
         });
     }
 }
 
-/**
- * فتح نافذة إضافة منشور
- */
 function openPostModal() {
+    // استخدام تأكيد من تليجرام بدلاً من البرومبت البسيط أحياناً يكون أفضل، 
+    // لكن سنبقي على طلباتك مع إضافة صمام أمان
     const title = prompt("عنوان الخبر:");
     const excerpt = prompt("وصف مختصر:");
-    const imageURL = prompt("ضع رابط الصورة المباشر هنا:", "https://");
+    const imageURL = prompt("رابط الصورة المباشر:", "https://");
 
     if (title && excerpt && imageURL) {
-        const postsRef = db.ref('posts'); 
+        // نستخدم المرجع المباشر للتأكد
+        const postsRef = firebase.database().ref('posts'); 
         postsRef.push({
             title: title,
             excerpt: excerpt,
@@ -64,37 +68,29 @@ function openPostModal() {
             admin_id: ADMIN_ID,
             tag: "NEWS"
         }).then(() => {
-            tg.showAlert("تم النشر بنجاح! ✅");
-        }).catch((error) => {
-            console.error("Firebase Error:", error);
-            tg.showAlert("حدث خطأ أثناء الاتصال بقاعدة البيانات.");
+            tg.showAlert("تم النشر في مجتمع XPay بنجاح! 🚀");
+        }).catch((err) => {
+            alert("فشل النشر: " + err.message);
         });
-    } else if (title || excerpt || imageURL) {
-        tg.showAlert("يرجى ملء جميع الحقول للنشر.");
     }
 }
 
-/**
- * دالة جلب المنشورات وعرضها مع دعم أزرار التحكم للمسؤول
- */
 function loadPosts() {
     const postsContainer = document.getElementById('news-feed');
     if (!postsContainer) return;
 
-    db.ref('posts').orderByChild('timestamp').on('value', (snapshot) => {
+    // orderByChild('timestamp') لضمان ترتيب الأخبار من الأحدث
+    firebase.database().ref('posts').orderByChild('timestamp').on('value', (snapshot) => {
         postsContainer.innerHTML = ''; 
         
         snapshot.forEach((childSnapshot) => {
             const post = childSnapshot.val();
             const postId = childSnapshot.key;
-
-            const mediaHTML = post.fileType && post.fileType.includes('video') 
-                ? `<video src="${post.image}" controls class="post-img" style="max-height:300px; background:#000;"></video>` 
-                : `<img src="${post.image || 'https://via.placeholder.com/300'}" class="post-img">`;
+            const isAdmin = (tg.initDataUnsafe?.user?.id === ADMIN_ID || window.location.hash.includes("admin"));
 
             const postHTML = `
                 <div class="post-card" id="post-${postId}">
-                    ${mediaHTML}
+                    <img src="${post.image || 'https://via.placeholder.com/300'}" class="post-img">
                     <div class="post-content">
                         <span class="post-tag">${post.tag || 'NEWS'}</span>
                         <h3 class="post-title">${post.title}</h3>
@@ -103,18 +99,19 @@ function loadPosts() {
                             <button class="react-btn" onclick="handleReaction('like', this)">
                                 👍 <span class="reaction-count">0</span>
                             </button>
-                            ${(tg.initDataUnsafe?.user?.id === ADMIN_ID || window.location.hash === "#admin") ? `
-                                <div class="admin-controls" style="display:flex;">
-                                    <button class="admin-btn edit" onclick="editPost('${postId}')">📝</button>
-                                    <button class="admin-btn delete" onclick="deletePost(this, '${postId}')">🗑️</button>
-                                </div>
-                            ` : ''}                                                
+                            <div class="admin-controls" style="display: ${isAdmin ? 'flex' : 'none'};">
+                                <button class="admin-btn edit" onclick="editPost('${postId}')">📝</button>
+                                <button class="admin-btn delete" onclick="deletePost(this, '${postId}')">🗑️</button>
+                            </div>                                               
                         </div>
                     </div>
                 </div>
             `;
             postsContainer.insertAdjacentHTML('afterbegin', postHTML);
         });
+    });
+}
+
         // إعادة التحقق بعد تحميل المنشورات للتأكد من ظهور الأزرار
         checkAdminPrivileges();
     });

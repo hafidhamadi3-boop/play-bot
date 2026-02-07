@@ -14,7 +14,7 @@
 </head>
 <body>
 
-    <div class="news-ticker">
+    <div class="news-ticker" onclick="if(window.location.hash.includes('admin')) updateTicker()">
         <div class="ticker-content" id="ticker-text">
             🔥 إطلاق عملة XPC قريباً.. استعدوا للثراء! | 🚀 مبروك "أحمد" ربح 1000 نقطة اليوم | 💎 X-Pay: مجتمع الطموحين الأول..
         </div>
@@ -60,21 +60,23 @@
         </div>
     </div>
 
-<div style="display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: rgba(255,255,255,0.02); border-radius: 15px; margin: 10px;">
-    <h4 style="margin: 0; display: flex; align-items: center; gap: 10px; color: #eee;">
-        <i class="fas fa-newspaper" style="color: var(--accent); font-size: 1.2rem;"></i>
-        <span data-i18n="news_feed">آخر التحديثات</span>
-    </h4>
-    
-    <button id="admin-add-post" onclick="openPostModal()" class="admin-glow-btn" style="display: none;">
-        <i class="fas fa-plus-circle"></i> نشر جديد
-    </button>
-</div>
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; background: rgba(255,255,255,0.02); border-radius: 15px; margin: 10px;">
+        <h4 style="margin: 0; display: flex; align-items: center; gap: 10px; color: #eee;">
+            <i class="fas fa-newspaper" style="color: var(--accent); font-size: 1.2rem;"></i>
+            <span data-i18n="news_feed">آخر التحديثات</span>
+        </h4>
+        
+        <button id="admin-add-post" onclick="openPostModal()" class="admin-glow-btn" style="display: none;">
+            <i class="fas fa-plus-circle"></i> نشر جديد
+        </button>
+    </div>
+
     <div class="posts-container" id="news-feed" style="padding: 0 15px 120px;">
         <div id="loading-posts" style="text-align: center; color: #888; padding: 20px;">
             <i class="fas fa-spinner fa-spin"></i> جاري تحميل المستجدات...
         </div>
     </div>
+
     <div class="sidebar" id="sidebar">
         <div style="text-align: left;"><i class="fas fa-times fa-2x" onclick="toggleMenu()" style="cursor:pointer;"></i></div>
         <div style="text-align: center; margin-top: 10px;">
@@ -122,9 +124,8 @@
             <b style="color: var(--accent);">💬 الدردشة العالمية</b>
             <i class="fas fa-times" onclick="toggleChat()" style="cursor:pointer;"></i>
         </div>
-        <div id="chat-messages" style="height: 80%; overflow-y: auto; padding: 15px 0;">
-            <div style="margin-bottom: 10px;"><small style="color: var(--accent);">نظام:</small> مرحباً بك في مجتمع X-PAY!</div>
-        </div>
+        <div id="chat-messages">
+            </div>
         <div style="display: flex; gap: 10px;">
             <input type="text" id="chat-input" placeholder="..." style="flex: 1; background: #222; border: none; border-radius: 10px; color: white; padding: 10px;">
             <button onclick="sendMessage()" style="background: var(--accent); border: none; border-radius: 10px; padding: 0 15px;"><i class="fas fa-paper-plane"></i></button>
@@ -134,14 +135,10 @@
     <div class="chat-fab" onclick="toggleChat()"><i class="fas fa-comments fa-2x"></i></div>
     <div class="leaderboard-fab" onclick="window.location.href='leaderboard.html'"><i class="fas fa-trophy"></i></div>
 
-    <div class="live-activity" id="live-activity">
-        👤 4,250 مستخدم نشط الآن | ⛏️ جاري تعدين 12.5 XPC...
-    </div>
+    <div class="live-activity" id="live-activity"> جاري التحميل... </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
 
-    <script src="script.js"></script>
-    <script src="chat.js"></script>
-</body>
+    <script src="script.js"></script> <script src="chat.js"></script>   <script src="admin.js"></script>  </body>
 </html>

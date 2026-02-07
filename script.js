@@ -1,3 +1,7 @@
+/**
+ * X-PAY Main Engine 🚀 - User Version
+ */
+
 // 1. إعدادات Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyC1Tb7gOIaRhp5Nw1GShKA-TptvOTUhiOU",
@@ -19,62 +23,12 @@ const storage = firebase.storage();
 const tg = window.Telegram.WebApp;
 tg.expand();
 
-// --- إعدادات الإدارة (Admin Settings) ---
+// معرف الإدارة (لأغراض التحقق البصري فقط هنا)
 const ADMIN_ID = 1954301817; 
 
 /**
- * دالة التحقق من المالك وإظهار أدوات التحكم
- * تم تحسينها لتظهر الزر بناءً على المعرف الصريح
+ * نظام جلب وعرض المنشورات للمستخدمين
  */
-/**
- * نظام الإدارة المطور - XPay
- */
-
-function checkAdminPrivileges() {
-    const userId = tg.initDataUnsafe?.user?.id;
-    // استخدام includes لضمان عمل الهاش حتى لو تغير الرابط قليلاً
-    const isAdmin = (userId === ADMIN_ID || window.location.hash.includes("admin"));
-    
-    if (isAdmin) {
-        console.log("Admin Verified ✅");
-        
-        const addBtn = document.getElementById('admin-add-post');
-        if (addBtn) {
-            addBtn.style.setProperty('display', 'block', 'important');
-        }
-
-        // إظهار عناصر التحكم في المنشورات الموجودة فعلياً
-        document.querySelectorAll('.admin-controls').forEach(el => {
-            el.style.setProperty('display', 'flex', 'important');
-        });
-    }
-}
-
-function openPostModal() {
-    // استخدام تأكيد من تليجرام بدلاً من البرومبت البسيط أحياناً يكون أفضل، 
-    // لكن سنبقي على طلباتك مع إضافة صمام أمان
-    const title = prompt("عنوان الخبر:");
-    const excerpt = prompt("وصف مختصر:");
-    const imageURL = prompt("رابط الصورة المباشر:", "https://");
-
-    if (title && excerpt && imageURL) {
-        // نستخدم المرجع المباشر للتأكد
-        const postsRef = firebase.database().ref('posts'); 
-        postsRef.push({
-            title: title,
-            excerpt: excerpt,
-            image: imageURL,
-            timestamp: Date.now(),
-            admin_id: ADMIN_ID,
-            tag: "NEWS"
-        }).then(() => {
-            tg.showAlert("تم النشر في مجتمع XPay بنجاح! 🚀");
-        }).catch((err) => {
-            alert("فشل النشر: " + err.message);
-        });
-    }
-}
-
 function loadPosts() {
     const postsContainer = document.getElementById('news-feed');
     if (!postsContainer) return;
@@ -84,6 +38,8 @@ function loadPosts() {
         snapshot.forEach((childSnapshot) => {
             const post = childSnapshot.val();
             const postId = childSnapshot.key;
+            
+            // التحقق إذا كان المستخدم الحالي هو المدير لإظهار أزرار التحكم (يتم تفعيلها برمجياً أيضاً من admin.js)
             const isAdmin = (tg.initDataUnsafe?.user?.id === ADMIN_ID || window.location.hash.includes("admin"));
 
             const postHTML = `
@@ -106,53 +62,16 @@ function loadPosts() {
                 </div>`;
             postsContainer.insertAdjacentHTML('afterbegin', postHTML);
         });
-        // استدعاء التحقق هنا داخل المستمع لضمان ظهور الزر بعد التحميل
-        checkAdminPrivileges();
-    });
-}
-
-/**
- * وظيفة التعديل الجديدة
- */
-function editPost(postId) {
-    db.ref('posts/' + postId).once('value').then((snapshot) => {
-        const post = snapshot.val();
-        const newTitle = prompt("تعديل العنوان:", post.title);
-        const newExcerpt = prompt("تعديل الوصف:", post.excerpt);
-        const newImage = prompt("تعديل رابط الصورة:", post.image);
-
-        if (newTitle && newExcerpt && newImage) {
-            db.ref('posts/' + postId).update({
-                title: newTitle,
-                excerpt: newExcerpt,
-                image: newImage
-            }).then(() => {
-                tg.showAlert("تم تحديث المنشور بنجاح! ✨");
-            });
+        
+        // استدعاء التحقق من الإدارة من ملف admin.js إذا كان موجوداً
+        if (typeof checkAdminPrivileges === 'function') {
+            checkAdminPrivileges();
         }
     });
 }
 
 /**
- * حذف المنشور
- */
-function deletePost(btn, postId) {
-    tg.showConfirm("هل أنت متأكد من حذف هذا المنشور نهائياً؟", (ok) => {
-        if (ok) {
-            db.ref('posts/' + postId).remove().then(() => {
-                tg.HapticFeedback.notificationOccurred('success');
-            });
-            const card = btn.closest('.post-card');
-            if (card) {
-                card.style.opacity = '0';
-                setTimeout(() => card.remove(), 300);
-            }
-        }
-    });
-}
-
-/**
- * نظام التفاعلات
+ * نظام التفاعلات (الإعجابات)
  */
 function handleReaction(type, btn) {
     tg.HapticFeedback.impactOccurred('light');
@@ -172,7 +91,7 @@ function handleReaction(type, btn) {
 }
 
 /**
- * تجميع الأرباح
+ * نظام تجميع الأرباح (Coins Effect)
  */
 function claimRewards(e) {
     const x = e.clientX || window.innerWidth / 2;
@@ -193,7 +112,7 @@ function createCoin(x, y) {
 }
 
 /**
- * القائمة الجانبية
+ * التحكم في الواجهة (القائمة والدردشة)
  */
 function toggleMenu() {
     const sidebar = document.getElementById('sidebar');
@@ -201,7 +120,6 @@ function toggleMenu() {
         sidebar.classList.toggle('active');
         const isActive = sidebar.classList.contains('active');
         document.body.style.overflow = isActive ? 'hidden' : '';
-        document.body.style.touchAction = isActive ? 'none' : '';
         tg.HapticFeedback.impactOccurred('medium');
     }
 }
@@ -232,7 +150,7 @@ function changeLanguage(lang) {
 }
 
 /**
- * التشغيل النهائي
+ * التشغيل النهائي عند تحميل الصفحة
  */
 window.onload = () => {
     const savedLang = localStorage.getItem('preferredLang') || 'ar';
@@ -240,7 +158,6 @@ window.onload = () => {
 
     loadPosts(); 
     if (typeof loadMessages === 'function') loadMessages();
-    checkAdminPrivileges();
 
     if (tg.initDataUnsafe?.user) {
         const userField = document.getElementById('username_side');
@@ -249,7 +166,7 @@ window.onload = () => {
 };
 
 /**
- * شريط النشاط
+ * تحديث شريط النشاط المباشر
  */
 setInterval(() => {
     const activityBar = document.getElementById('live-activity');

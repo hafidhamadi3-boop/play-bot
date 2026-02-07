@@ -4,38 +4,113 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>X-Pay Leaderboard</title>
+    
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="languages.js"></script> 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    
     <style>
-        :root { --bg: #050507; --card-bg: #16161e; --accent: #00d2ff; --gold: #ffcf4b; --silver: #c0c0c0; --bronze: #cd7f32; }
-        body { background-color: var(--bg); color: white; font-family: 'Cairo', sans-serif; margin: 0; padding-bottom: 100px; overflow-x: hidden; }
-        .info-bar { background: linear-gradient(to left, rgba(0, 210, 255, 0.2), transparent); margin: 15px; padding: 15px; border-radius: 20px; display: flex; justify-content: space-between; align-items: center; border-right: 4px solid var(--accent); }
-        .help-btn { background: rgba(255, 255, 255, 0.1); width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; color: var(--accent); }
-        .tabs-container { display: flex; justify-content: space-around; padding: 5px; background: var(--card-bg); margin: 10px 15px; border-radius: 15px; }
-        .tab-btn { background: none; border: none; color: #888; padding: 10px 15px; font-weight: bold; font-family: 'Cairo'; flex: 1; transition: 0.3s; }
-        .tab-btn.active { color: white; background: var(--accent); border-radius: 12px; box-shadow: 0 4px 10px rgba(0, 210, 255, 0.3); }
+        :root { 
+            --bg: #050507; 
+            --card-bg: #16161e; 
+            --accent: #00d2ff; 
+            --gold: #ffcf4b; 
+            --silver: #c0c0c0; 
+            --bronze: #cd7f32; 
+        }
+
+        body { 
+            background-color: var(--bg); 
+            color: white; 
+            font-family: 'Cairo', sans-serif; 
+            margin: 0; 
+            padding-bottom: 100px; 
+            overflow-x: hidden; 
+        }
+
+        /* شريط المعلومات العلوي */
+        .info-bar { 
+            background: linear-gradient(to left, rgba(0, 210, 255, 0.2), transparent); 
+            margin: 15px; padding: 15px; 
+            border-radius: 20px; 
+            display: flex; justify-content: space-between; align-items: center; 
+            border-right: 4px solid var(--accent); 
+        }
+
+        .help-btn { 
+            background: rgba(255, 255, 255, 0.1); 
+            width: 35px; height: 35px; border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; 
+            cursor: pointer; font-weight: bold; color: var(--accent); 
+        }
+
+        /* التبويبات */
+        .tabs-container { 
+            display: flex; justify-content: space-around; 
+            padding: 5px; background: var(--card-bg); 
+            margin: 10px 15px; border-radius: 15px; 
+        }
+
+        .tab-btn { 
+            background: none; border: none; color: #888; 
+            padding: 10px 15px; font-weight: bold; 
+            font-family: 'Cairo'; flex: 1; transition: 0.3s; 
+        }
+
+        .tab-btn.active { 
+            color: white; background: var(--accent); 
+            border-radius: 12px; box-shadow: 0 4px 10px rgba(0, 210, 255, 0.3); 
+        }
+
+        /* منصة التتويج */
         .podium { display: flex; justify-content: center; align-items: flex-end; margin: 30px 0; gap: 10px; }
         .podium-item { text-align: center; position: relative; }
         .rank-1 { width: 100px; order: 2; transform: translateY(-15px); }
         .rank-2 { width: 85px; order: 1; }
         .rank-3 { width: 85px; order: 3; }
-        .avatar-wrap { width: 100%; aspect-ratio: 1; border-radius: 50%; border: 3px solid; overflow: hidden; background: #222; margin-bottom: 10px; }
+        
+        .avatar-wrap { 
+            width: 100%; aspect-ratio: 1; border-radius: 50%; 
+            border: 3px solid; overflow: hidden; background: #222; margin-bottom: 10px; 
+        }
+
         .rank-1 .avatar-wrap { border-color: var(--gold); box-shadow: 0 0 15px var(--gold); }
         .rank-2 .avatar-wrap { border-color: var(--silver); }
         .rank-3 .avatar-wrap { border-color: var(--bronze); }
         .crown { position: absolute; top: -25px; left: 50%; transform: translateX(-50%); font-size: 20px; }
+
+        /* قائمة المتصدرين */
         .leaderboard-list { margin: 0 15px; background: var(--card-bg); border-radius: 20px; overflow: hidden; }
         .user-row { display: flex; align-items: center; padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .user-row.me { background: rgba(0, 210, 255, 0.1); border-left: 3px solid var(--accent); }
         .rank-num { width: 30px; font-weight: bold; color: #888; }
         .user-info { flex: 1; margin: 0 10px; }
         .reward-val { color: var(--gold); font-weight: bold; }
-        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; height: 80px; background: #11111a; display: flex; border-top: 1px solid rgba(0, 210, 255, 0.2); z-index: 2000; }
-        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #666; font-size: 11px; cursor: pointer; text-decoration: none; }
-        .ads-btn { background: linear-gradient(45deg, #00d2ff, #9d50bb); color: white !important; margin-top: -20px; border-radius: 35px 35px 0 0; height: 100px; box-shadow: 0 -5px 20px rgba(0, 210, 255, 0.4); position: relative; }
-        .timer-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); border-radius: 35px 35px 0 0; display: none; flex-direction: column; align-items: center; justify-content: center; color: #ff4757; }
+
+        /* التنقل السفلي الموحد */
+        .bottom-nav { 
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 80px; 
+            background: #11111a; display: flex; 
+            border-top: 1px solid rgba(0, 210, 255, 0.2); z-index: 2000; 
+        }
+
+        .nav-item { 
+            flex: 1; display: flex; flex-direction: column; align-items: center; 
+            justify-content: center; color: #666; font-size: 11px; cursor: pointer; text-decoration: none; 
+        }
+
+        .ads-btn { 
+            background: linear-gradient(45deg, var(--accent), #9d50bb); 
+            color: white !important; margin-top: -20px; border-radius: 35px 35px 0 0; 
+            height: 100px; box-shadow: 0 -5px 20px rgba(0, 210, 255, 0.4); position: relative; 
+        }
+
+        .timer-overlay { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.8); border-radius: 35px 35px 0 0; 
+            display: none; flex-direction: column; align-items: center; justify-content: center; color: #ff4757; 
+        }
     </style>
 </head>
 <body>
@@ -56,32 +131,27 @@
 
     <div class="podium">
         <div class="podium-item rank-2">
-            <div class="avatar-wrap"><img src="https://i.pravatar.cc/100?img=1" width="100%"></div>
+            <div class="avatar-wrap"><img src="https://i.pravatar.cc/100?img=11" width="100%"></div>
             <small>Sami_DX</small>
             <div class="reward-val">25 XPC</div>
         </div>
         <div class="podium-item rank-1">
             <div class="crown">👑</div>
-            <div class="avatar-wrap"><img src="https://i.pravatar.cc/100?img=2" width="100%"></div>
+            <div class="avatar-wrap"><img src="https://i.pravatar.cc/100?img=22" width="100%"></div>
             <b data-i18n="legend">الأسطورة</b>
             <div class="reward-val">50 XPC</div>
         </div>
         <div class="podium-item rank-3">
-            <div class="avatar-wrap"><img src="https://i.pravatar.cc/100?img=3" width="100%"></div>
+            <div class="avatar-wrap"><img src="https://i.pravatar.cc/100?img=33" width="100%"></div>
             <small>Lina_Pro</small>
             <div class="reward-val">12.5 XPC</div>
         </div>
     </div>
 
-    <div class="leaderboard-list">
+    <div class="leaderboard-list" id="leader-list">
         <div class="user-row me">
             <span class="rank-num">12</span>
             <div class="user-info"><b data-i18n="you">أنت</b> (hafid)</div>
-            <span class="reward-val">5 XPC</span>
-        </div>
-        <div class="user-row">
-            <span class="rank-num">4</span>
-            <div class="user-info">عمر الطموح</div>
             <span class="reward-val">5 XPC</span>
         </div>
     </div>
@@ -96,7 +166,7 @@
             <div id="ad-content-normal">
                 <i class="fas fa-play-circle fa-2x"></i><br>
                 <span data-i18n="watch_ad">+10 نقاط</span>
-                <div style="font-size: 9px; opacity: 0.8;"><span id="ads-count">10</span>/10 <span data-i18n="remaining">متبقي</span></div>
+                <div style="font-size: 9px; opacity: 0.8;"><span id="ads-count">10</span>/10</div>
             </div>
             <div class="timer-overlay" id="timer-box">
                 <i class="fas fa-clock"></i>
@@ -115,13 +185,13 @@
         let adsLeft = 10;
         let cooldownActive = false;
 
-        // تطبيق اللغة عند التحميل
+        // تطبيق اللغة الموحد
         function applyLanguage() {
             const savedLang = localStorage.getItem('preferredLang') || 'ar';
             if (typeof translations === 'undefined') return;
             
             const data = translations[savedLang];
-            document.documentElement.dir = data.dir;
+            document.documentElement.dir = data.dir || 'rtl';
             document.documentElement.lang = savedLang;
 
             document.querySelectorAll('[data-i18n]').forEach(el => {
@@ -130,80 +200,59 @@
             });
         }
 
-        // تحديث التبويبات (يومي/أسبوعي/شهري)
+        // تبديل التبويبات
         function updateTab(btn, periodKey) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             
             const lang = localStorage.getItem('preferredLang') || 'ar';
-            const periodNames = {
-                daily: translations[lang].daily,
-                weekly: translations[lang].weekly,
-                monthly: translations[lang].monthly
-            };
+            // استخدام نصوص من ملف اللغات إذا توفرت
+            if (typeof translations !== 'undefined' && translations[lang][periodKey]) {
+                document.getElementById('period-text').innerText = translations[lang][periodKey];
+            }
             
-            document.getElementById('period-text').innerText = periodNames[periodKey];
             tg.HapticFeedback.impactOccurred('light');
         }
 
-        // إظهار قوانين المسابقة
+        // عرض القوانين بتنسيق تليجرام
         function showRules() {
             const lang = localStorage.getItem('preferredLang') || 'ar';
-            const rules = {
-                ar: "1. المركز الأول: 50 XPC\n2. المركز الثاني: 25 XPC\n3. المركز الثالث: 12.5 XPC\nتوزع الجوائز كل يوم أحد الساعة 12 ليلاً.",
-                en: "1. 1st Place: 50 XPC\n2. 2nd Place: 25 XPC\n3. 3rd Place: 12.5 XPC\nRewards distributed every Sunday at 12:00 AM."
-                // يمكن إضافة باقي اللغات هنا
-            };
+            const rulesText = lang === 'ar' ? 
+                "1. المركز الأول: 50 XPC\n2. المركز الثاني: 25 XPC\n3. المركز الثالث: 12.5 XPC\nتوزع الجوائز أسبوعياً." : 
+                "1. 1st: 50 XPC\n2. 2nd: 25 XPC\n3. 3rd: 12.5 XPC\nRewards weekly.";
 
-            tg.showPopup({
-                title: translations[lang].weekly_comp,
-                message: rules[lang] || rules['en'],
-                buttons: [{type: 'ok'}]
+            tg.showAlert(rulesText);
+        }
+
+        // نظام الإعلانات
+        function watchAd() {
+            if (cooldownActive) return;
+            tg.HapticFeedback.impactOccurred('medium');
+            
+            tg.showConfirm("هل تريد مشاهدة إعلان للحصول على 10 نقاط؟", (ok) => {
+                if (ok) {
+                    adsLeft--;
+                    document.getElementById('ads-count').innerText = adsLeft;
+                    tg.showAlert("مبروك! حصلت على 10 نقاط 💎");
+                    if (adsLeft <= 0) startCooldown();
+                }
             });
         }
 
-        // وظيفة مشاهدة الإعلان
-        function watchAd() {
-            if (cooldownActive) return;
-            const lang = localStorage.getItem('preferredLang') || 'ar';
-
-            if (adsLeft > 0) {
-                const confirmMsg = lang === 'ar' ? "شاهد إعلان للحصول على 10 نقاط؟" : "Watch ad to get 10 points?";
-                
-                tg.showConfirm(confirmMsg, (confirmed) => {
-                    if (confirmed) {
-                        // هنا يتم استدعاء Adsgram مستقبلاً
-                        adsLeft--;
-                        document.getElementById('ads-count').innerText = adsLeft;
-                        tg.HapticFeedback.notificationOccurred('success');
-                        
-                        const successMsg = lang === 'ar' ? "مبروك! ربحت 10 نقاط." : "Congrats! You earned 10 points.";
-                        tg.showAlert(successMsg);
-                        
-                        if (adsLeft === 0) startCooldown();
-                    }
-                });
-            }
-        }
-
-        // نظام العداد التنازلي للإعلانات
         function startCooldown() {
             cooldownActive = true;
             document.getElementById('timer-box').style.display = 'flex';
-            let timeLeft = 3600; // 1 ساعة بالثواني
+            let timeLeft = 3600; 
 
             const interval = setInterval(() => {
                 let m = Math.floor(timeLeft / 60);
                 let s = timeLeft % 60;
                 document.getElementById('countdown').innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
-                timeLeft--;
-
-                if (timeLeft < 0) {
+                if (timeLeft-- <= 0) {
                     clearInterval(interval);
                     cooldownActive = false;
                     adsLeft = 10;
                     document.getElementById('timer-box').style.display = 'none';
-                    document.getElementById('ads-count').innerText = adsLeft;
                 }
             }, 1000);
         }
